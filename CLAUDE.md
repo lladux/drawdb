@@ -22,7 +22,7 @@ Dependency build scripts are blocked unless listed under `allowBuilds` in `pnpm-
 
 There is no test suite and no CI; check changes with `pnpm lint` and `pnpm build` locally. A Husky pre-commit hook runs `pnpm exec lint-staged` (ESLint `--fix` + Prettier on staged files).
 
-Docker: `docker build -t drawdb . && docker run -p 3000:80 drawdb`. The image serves `dist/` via nginx and generates `/config.js` at runtime from `VITE_BACKEND_URL` / `VITE_GIST_BACKEND_URL`, which sets `window.__DRAWDB_CONFIG__`. `src/config/index.js` resolves the backend URL in this order: runtime config, then the Vite env var (`.env`, see `.env.sample`), then `http://localhost:5000`.
+Backend URL: `src/config/index.js` resolves it in this order: `window.__DRAWDB_CONFIG__` (set by `public/config.js`, empty by default; lets a static host change the URL without rebuilding), then the Vite env var (`.env`, see `.env.sample`), then `http://localhost:5000`.
 
 ## Conventions (from CONTRIBUTING.md)
 

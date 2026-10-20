@@ -44,20 +44,7 @@ pnpm install
 pnpm build
 ```
 
-### Docker Build
-
-```bash
-docker build -t drawdb .
-docker run -p 3000:80 drawdb
-```
-
 If you want to enable sharing, run the Python backend in [`server/`](server/README.md) (a port of [drawdb-server](https://github.com/drawdb-io/drawdb-server)) and set the environment variables according to `.env.sample`. This is optional unless you need to share files.
-
-With the Docker image, pass the server URL when starting the container. No rebuild is needed:
-
-```bash
-docker run -p 3000:80 -e VITE_BACKEND_URL=https://your-drawdb-server.example.com drawdb
-```
 
 ## Contributing
 

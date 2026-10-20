@@ -30,13 +30,6 @@ Point the frontend at it with `VITE_BACKEND_URL=http://localhost:5000` (the fron
 
 Tests use a fake GitHub API (`httpx.MockTransport`) and a stubbed SMTP sender, so they need no network or credentials.
 
-## Docker
-
-```bash
-docker build -t drawdb-server server
-docker run -p 5000:5000 --env-file server/.env drawdb-server
-```
-
 ## Differences from the original
 
 - Attachments in bug reports must be base64 `data:` URIs. The original passed `path` straight to nodemailer, which also accepts server file paths and URLs.
