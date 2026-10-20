@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-drawDB is an ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). Upstream is browser-only and stores diagrams in IndexedDB. **In this fork, diagrams, sharing and version history are stored in SQLite by the Python/FastAPI backend in `server/`**, so the editor needs that server running. Templates stay in IndexedDB.
+drawDB is an ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). Upstream is browser-only and stores diagrams in IndexedDB. **In this fork, diagrams, sharing and version history are stored in SQLite by the Python/FastAPI backend in `server/`**, so the editor needs that server running. Templates stay in IndexedDB. The home page (`/`, `src/pages/Hub.jsx`) is a hub of diagrams grouped into workspaces, each optionally password-protected.
 
 ## Commands
 
@@ -35,7 +35,7 @@ Backend URL: `src/config/index.js` resolves it in this order: `window.__DRAWDB_C
 
 ### Routing and pages
 
-`src/App.jsx` sets up routes: `/` (landing), `/editor`, `/editor/diagrams/:id`, `/editor/templates/:id`, `/templates`, `/bug-report`. `src/pages/Editor.jsx` wraps `components/Workspace.jsx` in a deep stack of context providers. Some contexts depend on others through hooks (for example, `DiagramContext` uses `useTransform`, `useUndoRedo`, `useSelect` and `useCollab`), so **provider order matters**.
+`src/App.jsx` sets up routes: `/` (hub), `/editor`, `/editor/diagrams/:id`, `/editor/templates/:id`, `/templates`, `/bug-report`. `src/pages/Editor.jsx` wraps `components/Workspace.jsx` in a deep stack of context providers. Some contexts depend on others through hooks (for example, `DiagramContext` uses `useTransform`, `useUndoRedo`, `useSelect` and `useCollab`), so **provider order matters**. `SettingsContextProvider` (theme, autosave, …) is mounted once in `App.jsx` for every page; don't add another one in a page, or that page's settings stop being shared with the rest.
 
 ### State: contexts and hooks
 
@@ -50,6 +50,12 @@ Mutators in the entity contexts (`addTable`, `updateTable`, `deleteTable`, …) 
 ### Persistence and autosave
 
 Diagrams are saved to the backend through the editor's "cloud" extension hooks: `src/pages/Editor.jsx` provides `serverStorage` from `src/api/diagrams.js` (`cloudSave`/`cloudLoad`/`cloudList`/`cloudDelete`) via `ExtensionsContext`. With those hooks present, `Workspace.jsx`, `ControlPanel.jsx` (save, save as, delete) and the Open modal (`useDiagramList`) take their cloud code paths. In the UI these are labelled "Server". Diagrams that are still in IndexedDB from before show up as "Local", and a banner offers to move each one to the server.
+
+### Hub and workspaces
+
+`src/pages/Hub.jsx` lists workspaces in a sidebar and the selected workspace's diagrams as cards (`components/Hub/`). `DiagramPreview` fits the existing `Thumbnail` SVG renderer to the card using preview data (tables, areas, notes) that `GET /workspaces/{id}/diagrams` trims from each diagram on the server.
+
+`src/api/workspaces.js` keeps unlock tokens in localStorage (`drawdb.workspaceTokens`) and `authHeaders()` sends all of them on every diagram/workspace request. In the editor, a 401 from loading a diagram makes `serverStorage.cloudLoad` redirect to `/?unlock=<workspace>&next=<path>`, and the hub returns there after the password is entered. A new diagram is saved into the workspace from `?workspace=` (set by the hub's "New diagram"), else the open diagram's workspace, else the last one selected in the hub.
 
 `src/data/db.js` defines the Dexie (IndexedDB) database `drawDB`. It still holds `templates` (seeded from `src/templates/` via `data/seeds.js`) and any older local `diagrams`. A schema change requires bumping `db.version(...)` and adding an upgrade.
 
@@ -85,10 +91,10 @@ The UI uses Semi UI (`@douyinfe/semi-ui`) components and Toasts, Tailwind v4 for
 
 ## Backend (`server/`)
 
-FastAPI app with its own venv; it is independent of the pnpm toolchain. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `server/data/drawdb.sqlite3`). See `server/README.md` for the API.
+FastAPI app with its own venv; it is independent of the pnpm toolchain. Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (adds tests/lint); `pyproject.toml` only configures pytest and ruff. Run commands from `server/`. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `server/data/drawdb.sqlite3`). See `server/README.md` for the API.
 
 ```bash
-cd server && python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
+cd server && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m app                      # run on $PORT (default 5000)
 .venv/bin/pytest                             # all tests
 .venv/bin/pytest tests/test_gists.py::test_compare
@@ -96,8 +102,10 @@ cd server && python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 ```
 
 - `app/main.py` `create_app(settings)` is the app factory. Tests (`tests/conftest.py`) give each test its own temporary SQLite file.
-- `app/diagrams.py`: `/diagrams` CRUD. The full diagram JSON is stored in one column, with name, database, size and timestamps as columns for listing.
+- `app/diagrams.py`: `/diagrams` CRUD. The full diagram JSON is stored in one column, with workspace, name, database, size and timestamps as columns for listing. Every operation checks access to the diagram's workspace through `WorkspaceStore.require_access`, which raises `WorkspaceLocked` (401) or `WorkspaceNotFound` (404).
+- `app/workspaces.py` and `app/auth.py`: workspaces with optional scrypt-hashed passwords, and HMAC tokens bound to the workspace's current password hash (read from the `X-Workspace-Tokens` header). The signing key is generated once and kept in the `meta` table.
+- `app/storage.py` migrates older databases with `PRAGMA user_version`. Bump `SCHEMA_VERSION` and add a step to `_migrate` when changing existing tables.
 - `app/gist_store.py`: a SQLite stand-in for the GitHub Gists API. Each change stores a full snapshot of the gist's files as a revision with a random 40-hex `version`, and an update that changes nothing creates no revision. `app/gists.py` serves it with GitHub-shaped JSON.
 - Routes and JSON shapes must stay compatible with `src/api/diagrams.js`, `src/api/gists.js` and `src/api/email.js`. `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
-- Env vars: `HOST` (default `127.0.0.1`; there is no auth), `PORT`, `DATABASE_PATH`, `CLIENT_URLS`, `MAIL_*`, and `NODE_ENV=dev` for open CORS and reload.
+- Env vars: `HOST` (default `127.0.0.1`), `PORT`, `DATABASE_PATH`, `CLIENT_URLS` (CORS allowlist; when unset, any localhost origin is allowed), `MAIL_*`, and `NODE_ENV=dev` for open CORS and reload.
 - Routes that touch SQLite or SMTP are sync `def` on purpose, so FastAPI runs the blocking calls in a thread pool.

@@ -2,7 +2,7 @@
 
 Python (FastAPI) backend for this fork of drawDB, started as a port of [drawdb-io/drawdb-server](https://github.com/drawdb-io/drawdb-server). It:
 
-1. Stores diagrams in a SQLite database (`/diagrams`).
+1. Stores diagrams in a SQLite database (`/diagrams`), grouped into workspaces (`/workspaces`) that can each have a password.
 2. Stores shared diagrams and version history in the same database (`/gists/...`). The routes and JSON keep the shape of the GitHub Gists API that the original server proxied, so the frontend's sharing and versioning code is unchanged, but nothing is sent to GitHub.
 3. Sends bug reports by email (`POST /email/send`).
 
@@ -15,33 +15,48 @@ Copy `.env.sample` to `.env` and adjust it.
 ```bash
 cd server
 python3 -m venv .venv
-.venv/bin/pip install -e '.[dev]'
+.venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m app        # http://127.0.0.1:5000 by default
 ```
 
+`requirements.txt` has what the server needs to run, pinned to tested versions; `requirements-dev.txt` adds the test and lint tools. Run commands from the `server/` directory.
+
 The database is created at `server/data/drawdb.sqlite3` (override with `DATABASE_PATH`). Back up that file to back up all diagrams.
 
-The frontend talks to `http://localhost:5000` by default; change it with `VITE_BACKEND_URL`.
+The frontend talks to `http://localhost:5000` by default; change it with `VITE_BACKEND_URL`. Without a `.env`, the server accepts requests from any frontend on `localhost`, `127.0.0.1` or `[::1]`; set `CLIENT_URLS` to allow other origins (it then replaces that default).
 
-There is no authentication: anyone who can reach the server can read, change and delete every diagram. It listens on `127.0.0.1` by default; only set `HOST=0.0.0.0` on a network you trust.
+## Workspaces and passwords
+
+Every diagram belongs to a workspace. On first start the server creates a `Personal` workspace without a password and moves any existing diagrams into it.
+
+A workspace can have a password (hashed with scrypt). `POST /workspaces/{id}/unlock` checks it and returns a token signed with a key stored in the database. Clients send their tokens in the `X-Workspace-Tokens` header (comma-separated, one per unlocked workspace), and requests for a locked workspace's diagrams get `401` with `{"workspaceId": ...}`. Tokens last 30 days, and changing or removing a password invalidates the old ones. A forgotten password can't be recovered.
+
+Workspaces without a password, workspace names, and shared diagrams (`/gists`, which work by unguessable link) are open to anyone who can reach the server. It listens on `127.0.0.1` by default; only set `HOST=0.0.0.0` on a network you trust, and put it behind HTTPS if it leaves your machine, since passwords and tokens travel in plain text otherwise.
 
 ## API
 
-| Method and path                               | Purpose                                                               |
-| --------------------------------------------- | --------------------------------------------------------------------- |
-| `GET /diagrams`                               | List diagrams (summaries, newest first)                               |
-| `GET /diagrams/{id}`                          | Full diagram                                                          |
-| `PUT /diagrams/{id}`                          | Create or replace a diagram                                           |
-| `DELETE /diagrams/{id}`                       | Delete a diagram                                                      |
-| `POST /gists`                                 | Create a gist with one file                                           |
-| `GET /gists/{id}`                             | Gist with the latest files                                            |
-| `PATCH /gists/{id}`                           | Change a file; omit `content` to remove it (an empty gist is deleted) |
-| `DELETE /gists/{id}`                          | Delete a gist                                                         |
-| `GET /gists/{id}/commits`                     | Revisions, newest first (`per_page`, `page`)                          |
-| `GET /gists/{id}/{sha}`                       | Gist at a revision                                                    |
-| `GET /gists/{id}/file-versions/{file}`        | Revisions that changed a file (`limit`, `cursor`)                     |
-| `GET /gists/{id}/file/{file}/compare/{a}/{b}` | A file's content at two revisions (`b` may be `null`)                 |
-| `POST /email/send`                            | Send a bug report                                                     |
+| Method and path                               | Purpose                                                                                 |
+| --------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `GET /diagrams`                               | Diagrams in every workspace you can open (summaries, newest first)                      |
+| `GET /diagrams/{id}`                          | Full diagram                                                                            |
+| `PUT /diagrams/{id}`                          | Create or replace a diagram; a new one goes to `workspaceId` (or the default workspace) |
+| `PATCH /diagrams/{id}`                        | Rename (`name`) or move (`workspaceId`) a diagram                                       |
+| `DELETE /diagrams/{id}`                       | Delete a diagram                                                                        |
+| `GET /workspaces`                             | Workspaces, with `protected` and `unlocked` flags                                       |
+| `POST /workspaces`                            | Create a workspace (`name`, optional `password`); returns a token if protected          |
+| `PATCH /workspaces/{id}`                      | Rename or change the password (`""` removes it)                                         |
+| `DELETE /workspaces/{id}`                     | Delete a workspace and its diagrams                                                     |
+| `POST /workspaces/{id}/unlock`                | Check the password and get a token                                                      |
+| `GET /workspaces/{id}/diagrams`               | The workspace's diagrams, with preview data for thumbnails                              |
+| `POST /gists`                                 | Create a gist with one file                                                             |
+| `GET /gists/{id}`                             | Gist with the latest files                                                              |
+| `PATCH /gists/{id}`                           | Change a file; omit `content` to remove it (an empty gist is deleted)                   |
+| `DELETE /gists/{id}`                          | Delete a gist                                                                           |
+| `GET /gists/{id}/commits`                     | Revisions, newest first (`per_page`, `page`)                                            |
+| `GET /gists/{id}/{sha}`                       | Gist at a revision                                                                      |
+| `GET /gists/{id}/file-versions/{file}`        | Revisions that changed a file (`limit`, `cursor`)                                       |
+| `GET /gists/{id}/file/{file}/compare/{a}/{b}` | A file's content at two revisions (`b` may be `null`)                                   |
+| `POST /email/send`                            | Send a bug report                                                                       |
 
 ## Tests and lint
 
@@ -55,7 +70,7 @@ Each test gets its own temporary SQLite file, and SMTP is stubbed, so tests need
 
 ## Differences from the original
 
-- Diagrams are stored here instead of in the browser's IndexedDB.
+- Diagrams are stored here instead of in the browser's IndexedDB, in password-protectable workspaces.
 - Gists live in SQLite instead of GitHub, so `GITHUB_TOKEN` is gone.
 - Attachments in bug reports must be base64 `data:` URIs. The original passed `path` straight to nodemailer, which also accepts server file paths and URLs.
 - Missing `subject`/`message` returns 400 and stops. The original sent the 400 and then tried to send the email anyway.

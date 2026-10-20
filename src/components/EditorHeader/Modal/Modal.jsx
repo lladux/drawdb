@@ -272,7 +272,7 @@ export default function Modal({
         setModal(MODAL.NONE);
         return;
       case MODAL.NEW:
-        window.open("/editor/templates/" + selectedTemplateId, "_blank");
+        navigate(`/editor/templates/${selectedTemplateId}`);
         setModal(MODAL.NONE);
         return;
       case MODAL.LANGUAGE:

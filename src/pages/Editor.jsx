@@ -6,7 +6,6 @@ import SelectContextProvider from "../context/SelectContext";
 import AreasContextProvider from "../context/AreasContext";
 import NotesContextProvider from "../context/NotesContext";
 import TypesContextProvider from "../context/TypesContext";
-import SettingsContextProvider from "../context/SettingsContext";
 import SaveStateContextProvider from "../context/SaveStateContext";
 import EnumsContextProvider from "../context/EnumsContext";
 import ViewsContextProvider from "../context/ViewsContext";
@@ -19,32 +18,30 @@ export default function Editor() {
   useThemedPage();
 
   return (
-    <SettingsContextProvider>
-      <LayoutContextProvider>
-        <TransformContextProvider>
-          <UndoRedoContextProvider>
-            <SelectContextProvider>
-              <AreasContextProvider>
-                <NotesContextProvider>
-                  <TypesContextProvider>
-                    <EnumsContextProvider>
-                      <ViewsContextProvider>
-                        <TablesContextProvider>
-                          <SaveStateContextProvider>
-                            <ExtensionsContext.Provider value={serverStorage}>
-                              <WorkSpace />
-                            </ExtensionsContext.Provider>
-                          </SaveStateContextProvider>
-                        </TablesContextProvider>
-                      </ViewsContextProvider>
-                    </EnumsContextProvider>
-                  </TypesContextProvider>
-                </NotesContextProvider>
-              </AreasContextProvider>
-            </SelectContextProvider>
-          </UndoRedoContextProvider>
-        </TransformContextProvider>
-      </LayoutContextProvider>
-    </SettingsContextProvider>
+    <LayoutContextProvider>
+      <TransformContextProvider>
+        <UndoRedoContextProvider>
+          <SelectContextProvider>
+            <AreasContextProvider>
+              <NotesContextProvider>
+                <TypesContextProvider>
+                  <EnumsContextProvider>
+                    <ViewsContextProvider>
+                      <TablesContextProvider>
+                        <SaveStateContextProvider>
+                          <ExtensionsContext.Provider value={serverStorage}>
+                            <WorkSpace />
+                          </ExtensionsContext.Provider>
+                        </SaveStateContextProvider>
+                      </TablesContextProvider>
+                    </ViewsContextProvider>
+                  </EnumsContextProvider>
+                </TypesContextProvider>
+              </NotesContextProvider>
+            </AreasContextProvider>
+          </SelectContextProvider>
+        </UndoRedoContextProvider>
+      </TransformContextProvider>
+    </LayoutContextProvider>
   );
 }

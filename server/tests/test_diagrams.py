@@ -19,6 +19,7 @@ def test_save_and_load_round_trip(client):
     assert summary["diagramId"] == "d1"
     assert summary["name"] == "Shop"
     assert summary["sizeBytes"] > 0
+    assert summary["workspaceId"]
 
     loaded = client.get("/diagrams/d1").json()["data"]
     assert loaded["tables"] == DIAGRAM["tables"]

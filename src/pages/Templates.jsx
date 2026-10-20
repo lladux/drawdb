@@ -1,186 +1,183 @@
 import { useEffect } from "react";
-import { Link } from "react-router-dom";
-import { Tabs, TabPane, Banner, Steps } from "@douyinfe/semi-ui";
-import { IconDeleteStroked } from "@douyinfe/semi-icons";
-import { db } from "../data/db";
+import { Link, useNavigate } from "react-router-dom";
+import { Button, Modal, Steps, TabPane, Tabs } from "@douyinfe/semi-ui";
 import { useLiveQuery } from "dexie-react-hooks";
-import Thumbnail from "../components/Thumbnail";
-import logo_light from "../assets/logo_light_160.png";
+import { useTranslation } from "react-i18next";
+import { db } from "../data/db";
+import { databases } from "../data/databases";
+import { useSettings, useThemedPage } from "../hooks";
+import DiagramPreview from "../components/Hub/DiagramPreview";
 import template_screenshot from "../assets/template_screenshot.png";
 
+function previewOf(template) {
+  return {
+    tables: template.tables ?? [],
+    areas: template.subjectAreas ?? [],
+    notes: template.notes ?? [],
+  };
+}
+
+function TemplateCard({ template, theme, onUse, onDelete }) {
+  const { t } = useTranslation();
+  const database = databases[template.database];
+
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={onUse}
+      onKeyDown={(e) => e.key === "Enter" && onUse()}
+      className="group rounded-lg border border-(--semi-color-border) bg-(--semi-color-bg-1) overflow-hidden cursor-pointer transition-shadow hover:shadow-lg focus-visible:outline-2 focus-visible:outline-(--semi-color-primary)"
+    >
+      <div className="h-48 border-b border-(--semi-color-border)">
+        <DiagramPreview
+          preview={previewOf(template)}
+          id={`template-${template.templateId}`}
+          theme={theme}
+        />
+      </div>
+      <div className="flex items-start gap-3 px-4 py-3">
+        {database?.image && (
+          <img
+            src={database.image}
+            alt={database.name}
+            className="h-6 w-6 mt-0.5"
+          />
+        )}
+        <div className="min-w-0 flex-1">
+          <div className="font-semibold truncate" title={template.title}>
+            {template.title}
+          </div>
+          {template.description && (
+            <div className="text-sm text-(--semi-color-text-2) line-clamp-2">
+              {template.description}
+            </div>
+          )}
+        </div>
+        {onDelete && (
+          <div onClick={(e) => e.stopPropagation()}>
+            <Button
+              theme="borderless"
+              type="danger"
+              aria-label={t("delete")}
+              icon={<i className="bi bi-trash3" />}
+              onClick={onDelete}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function Templates() {
+  useThemedPage();
+  const { t } = useTranslation();
+  const { settings } = useSettings();
+  const navigate = useNavigate();
+
   const defaultTemplates = useLiveQuery(() =>
     db.templates.where({ custom: 0 }).toArray(),
   );
-
   const customTemplates = useLiveQuery(() =>
     db.templates.where({ custom: 1 }).toArray(),
   );
 
-  const deleteTemplate = async (id) => {
-    await db.templates.delete(id);
-  };
-
-  const forkTemplate = (id) => {
-    window.open("/editor/templates/" + id, "_blank");
-  };
-
   useEffect(() => {
-    document.title = "Templates | drawDB";
-  }, []);
+    document.title = `${t("templates_title")} | drawDB`;
+  }, [t]);
+
+  const openTemplate = (template) =>
+    navigate(`/editor/templates/${template.templateId}`);
+
+  const confirmDelete = (template) =>
+    Modal.confirm({
+      title: t("templates_delete_title", { name: template.title }),
+      okText: t("delete"),
+      cancelText: t("cancel"),
+      okButtonProps: { type: "danger" },
+      onOk: () => db.templates.delete(template.id),
+    });
+
+  const grid = (templates, custom) => (
+    <div className="grid gap-6 my-6 grid-cols-[repeat(auto-fill,minmax(280px,1fr))]">
+      {templates?.map((template) => (
+        <TemplateCard
+          key={template.id}
+          template={template}
+          theme={settings.mode}
+          onUse={() => openTemplate(template)}
+          onDelete={custom ? () => confirmDelete(template) : null}
+        />
+      ))}
+    </div>
+  );
 
   return (
-    <div>
-      <div className="min-h-screen">
-        <div className="sm:py-3 py-5 px-12 xl:px-20 sm:px-6 flex justify-between items-center select-none">
-          <div className="flex items-center justify-start">
-            <Link to="/">
-              <img
-                src={logo_light}
-                alt="logo"
-                className="me-2 sm:h-[28px] md:h-[46px] h-[48px]"
-              />
-            </Link>
-            <div className="ms-4 sm:text-sm xl:text-xl text-xl font-semibold">
-              Templates
-            </div>
-          </div>
-        </div>
-        <hr className="border-zinc-300" />
-        <div className="xl:px-20 sm:px-6 px-12 py-6">
-          <div className="w-full md:w-[75%] xl:w-[50%] mb-2">
-            <div className="text-2xl sm:text-lg font-semibold mb-2 text-neutral-800">
-              Database schema templates
-            </div>
-            <div className="text-sm text-neutral-700">
-              A compilation of database entity relationship diagrams to give you
-              a quick start or inspire your application&apos;s architecture.
-            </div>
-          </div>
-          <Tabs>
-            <TabPane
-              tab={<span className="mx-2">Default templates</span>}
-              itemKey="1"
-            >
-              <div className="grid xl:grid-cols-3 grid-cols-2 sm:grid-cols-1 gap-10 my-6">
-                {defaultTemplates?.map((t, i) => (
-                  <div
-                    key={t.id}
-                    className="bg-gray-100 hover:translate-y-[-6px] transition-all duration-300 border rounded-md"
-                  >
-                    <div className="h-48">
-                      <Thumbnail
-                        diagram={t}
-                        i={"1" + i}
-                        zoom={0.3}
-                        theme="light"
-                      />
-                    </div>
-                    <div className="px-4 py-3">
-                      <div className="flex justify-between">
-                        <div className="text-lg font-bold text-zinc-700">
-                          {t.title}
-                        </div>
-                        <button
-                          className="border rounded-sm px-2 py-1 bg-white hover:bg-gray-200 transition-all duration-300"
-                          onClick={() => forkTemplate(t.templateId)}
-                        >
-                          <i className="fa-solid fa-code-fork"></i>
-                        </button>
-                      </div>
-                      <div>{t.description}</div>
-                    </div>
+    <div className="theme min-h-screen flex flex-col">
+      <header className="flex items-center gap-3 px-8 md:px-4 py-4 border-b border-(--semi-color-border)">
+        <Link to="/">
+          <Button
+            theme="borderless"
+            type="tertiary"
+            icon={<i className="bi bi-arrow-left" />}
+          >
+            {t("hub_title")}
+          </Button>
+        </Link>
+        <h1 className="text-xl font-semibold">{t("templates_title")}</h1>
+      </header>
+
+      <main className="flex-1 px-8 md:px-4 py-6">
+        <p className="max-w-2xl text-sm text-(--semi-color-text-2)">
+          {t("templates_subtitle")}
+        </p>
+        <Tabs>
+          <TabPane tab={t("templates_default")} itemKey="default">
+            {grid(defaultTemplates, false)}
+          </TabPane>
+          <TabPane tab={t("templates_yours")} itemKey="custom">
+            {customTemplates?.length > 0 ? (
+              grid(customTemplates, true)
+            ) : (
+              <div className="my-6 grid grid-cols-5 lg:grid-cols-1 gap-8 items-start">
+                <img
+                  src={template_screenshot}
+                  alt=""
+                  className="col-span-3 lg:col-span-1 rounded-md border border-(--semi-color-border)"
+                />
+                <div className="col-span-2 lg:col-span-1">
+                  <div className="text-lg font-semibold">
+                    {t("templates_none")}
                   </div>
-                ))}
-              </div>
-            </TabPane>
-            <TabPane
-              tab={<span className="mx-2">Your templates</span>}
-              itemKey="2"
-            >
-              {customTemplates?.length > 0 ? (
-                <div className="grid xl:grid-cols-3 grid-cols-2 sm:grid-cols-1 gap-8 my-6">
-                  {customTemplates?.map((c, i) => (
-                    <div
-                      key={c.id}
-                      className="bg-gray-100 hover:translate-y-[-6px] transition-all duration-300 border rounded-md"
-                    >
-                      <div className="h-48">
-                        <Thumbnail diagram={c} i={"2" + i} zoom={0.3} />
-                      </div>
-                      <div className="px-4 py-3 w-full">
-                        <div className="flex justify-between">
-                          <div className="text-lg font-bold text-zinc-700">
-                            {c.title}
-                          </div>
-                          <div>
-                            <button
-                              className="me-1 border rounded-sm px-2 py-1 bg-white hover:bg-gray-200 transition-all duration-300"
-                              onClick={() => forkTemplate(c.templateId)}
-                            >
-                              <i className="fa-solid fa-code-fork"></i>
-                            </button>
-                          </div>
-                        </div>
-                        <div className="flex justify-around mt-2">
-                          <button
-                            className="w-full text-center flex justify-center items-center border rounded-sm px-2 py-1 bg-white hover:bg-gray-200 transition-all duration-300 text-red-500"
-                            onClick={() => deleteTemplate(c.id)}
-                          >
-                            <IconDeleteStroked />
-                            <div className="ms-1.5 font-semibold">Delete</div>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="py-5">
-                  <Banner
-                    fullMode={false}
-                    type="info"
-                    bordered
-                    icon={null}
-                    closeIcon={null}
-                    description={<div>You have no custom templates saved.</div>}
-                  />
-                  <div className="grid grid-cols-5 sm:grid-cols-1 gap-4 place-content-center my-4">
-                    <img
-                      src={template_screenshot}
-                      className="border col-span-3 sm:cols-span-1 rounded-sm"
+                  <div className="text-sm text-(--semi-color-text-2) mb-4">
+                    {t("templates_how_to")}
+                  </div>
+                  <Steps direction="vertical" type="basic">
+                    <Steps.Step
+                      title={t("templates_step_build")}
+                      description={t("templates_step_build_hint")}
                     />
-                    <div className="col-span-2 sm:cols-span-1">
-                      <div className="text-xl font-bold my-4">
-                        How to save a template
-                      </div>
-                      <Steps direction="vertical" style={{ margin: "12px" }}>
-                        <Steps.Step
-                          title="Build a diagram"
-                          description="Build the template in the editor"
-                        />
-                        <Steps.Step
-                          title="Save as template"
-                          description="Editor > File > Save as template"
-                        />
-                        <Steps.Step
-                          title="Load a template"
-                          description="Fork a template to build on"
-                        />
-                      </Steps>
-                    </div>
-                  </div>
+                    <Steps.Step
+                      title={t("templates_step_save")}
+                      description={t("templates_step_save_hint")}
+                    />
+                    <Steps.Step
+                      title={t("templates_step_use")}
+                      description={t("templates_step_use_hint")}
+                    />
+                  </Steps>
                 </div>
-              )}
-            </TabPane>
-          </Tabs>
-        </div>
-      </div>
-      <hr className="border-zinc-300 my-1" />
-      <div className="text-center text-sm py-3">
+              </div>
+            )}
+          </TabPane>
+        </Tabs>
+      </main>
+
+      <footer className="text-center text-sm py-3 border-t border-(--semi-color-border) text-(--semi-color-text-2)">
         &copy; {new Date().getFullYear()} <strong>drawDB</strong> - All rights
         reserved.
-      </div>
+      </footer>
     </div>
   );
 }
