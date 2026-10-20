@@ -4,10 +4,10 @@ import { Button, Modal, Steps, TabPane, Tabs } from "@douyinfe/semi-ui";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useTranslation } from "react-i18next";
 import { db } from "../data/db";
-import { databases } from "../data/databases";
 import { useSettings, useThemedPage } from "../hooks";
 import DiagramPreview from "../components/Hub/DiagramPreview";
 import template_screenshot from "../assets/template_screenshot.png";
+import DatabaseIcon from "../components/DatabaseIcon";
 
 function previewOf(template) {
   return {
@@ -19,7 +19,6 @@ function previewOf(template) {
 
 function TemplateCard({ template, theme, onUse, onDelete }) {
   const { t } = useTranslation();
-  const database = databases[template.database];
 
   return (
     <div
@@ -37,13 +36,7 @@ function TemplateCard({ template, theme, onUse, onDelete }) {
         />
       </div>
       <div className="flex items-start gap-3 px-4 py-3">
-        {database?.image && (
-          <img
-            src={database.image}
-            alt={database.name}
-            className="h-6 w-6 mt-0.5"
-          />
-        )}
+        <DatabaseIcon database={template.database} className="h-6 w-6 mt-0.5" />
         <div className="min-w-0 flex-1">
           <div className="font-semibold truncate" title={template.title}>
             {template.title}

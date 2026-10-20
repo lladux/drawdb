@@ -112,6 +112,7 @@ import { DateTime } from "luxon";
 import ConfigureCustomTypes from "./ConfigureCustomTypes";
 import { useDiagramList } from "./Modal/Open/hooks/useDiagramList";
 import { mergeDiagrams, sortDiagrams } from "./Modal/Open/diagram";
+import DatabaseIcon from "../DatabaseIcon";
 
 const EDITOR_HOTKEY = {
   preventDefault: true,
@@ -2282,22 +2283,13 @@ export default function ControlPanel({
           </Link>
           <div className="ms-1 mt-1">
             <div className="flex items-center ms-3 gap-2">
-              {databases[database].image && (
-                <img
-                  src={databases[database].image}
-                  className="h-5"
-                  style={{
-                    filter:
-                      "opacity(0.4) drop-shadow(0 0 0 white) drop-shadow(0 0 0 white)",
-                  }}
-                  alt={t("database_icon", {
-                    databaseName: databases[database].name,
-                  })}
-                  title={t("database_diagram", {
-                    databaseName: databases[database].name,
-                  })}
-                />
-              )}
+              <DatabaseIcon
+                database={database}
+                className="h-5 w-5"
+                title={t("database_diagram", {
+                  databaseName: databases[database].name,
+                })}
+              />
               <div
                 className="text-xl flex items-center gap-1 me-1"
                 onPointerEnter={(e) => e.isPrimary && setShowEditName(true)}

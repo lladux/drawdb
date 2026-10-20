@@ -42,6 +42,7 @@ import {
   readDismissedBanners,
   addDismissedBanner,
 } from "../utils/dismissedBanners";
+import DatabaseIcon from "./DatabaseIcon";
 
 export const IdContext = createContext({
   gistId: "",
@@ -582,16 +583,11 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
                   </Tag>
                 )}
               </div>
-              {x.image && (
-                <img
-                  src={x.image}
-                  className="h-8"
-                  style={{
-                    filter:
-                      "opacity(0.4) drop-shadow(0 0 0 white) drop-shadow(0 0 0 white)",
-                  }}
-                />
-              )}
+              <DatabaseIcon
+                database={x.label}
+                className="h-8 w-8"
+                position="left"
+              />
               <div className="text-xs">{x.description}</div>
             </div>
           ))}

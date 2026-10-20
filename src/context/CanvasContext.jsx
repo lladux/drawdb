@@ -34,6 +34,10 @@ export const CanvasContext = createContext({
   },
 });
 
+// Until the canvas has been measured its size is 0; dividing by it would
+// turn every coordinate into NaN.
+const ratio = (value, total) => (total ? value / total : 0);
+
 export function CanvasContextProvider({ children, ...attrs }) {
   const canvasWrapRef = useRef(null);
   const { transform } = useTransform();
@@ -70,11 +74,11 @@ export function CanvasContextProvider({ children, ...attrs }) {
     (coord) => ({
       x:
         typeof coord.x === "number"
-          ? (coord.x / screenSize.x) * viewBox.width + viewBox.left
+          ? ratio(coord.x, screenSize.x) * viewBox.width + viewBox.left
           : undefined,
       y:
         typeof coord.y === "number"
-          ? (coord.y / screenSize.y) * viewBox.height + viewBox.top
+          ? ratio(coord.y, screenSize.y) * viewBox.height + viewBox.top
           : undefined,
     }),
     [
@@ -91,11 +95,11 @@ export function CanvasContextProvider({ children, ...attrs }) {
     (coord) => ({
       x:
         typeof coord.x === "number"
-          ? ((coord.x - viewBox.left) / viewBox.width) * screenSize.x
+          ? ratio(coord.x - viewBox.left, viewBox.width) * screenSize.x
           : undefined,
       y:
         typeof coord.y === "number"
-          ? ((coord.y - viewBox.top) / viewBox.height) * screenSize.y
+          ? ratio(coord.y - viewBox.top, viewBox.height) * screenSize.y
           : undefined,
     }),
     [
@@ -163,5 +167,5 @@ export function CanvasContextProvider({ children, ...attrs }) {
         {children}
       </div>
     </CanvasContext.Provider>
-  )
+  );
 }
