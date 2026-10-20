@@ -1,11 +1,4 @@
-import {
-  Button,
-  Image,
-  Input,
-  Modal as SemiUIModal,
-  Spin,
-  Toast,
-} from "@douyinfe/semi-ui";
+import { Image, Input, Modal as SemiUIModal, Spin } from "@douyinfe/semi-ui";
 import { saveAs } from "file-saver";
 import { Parser } from "node-sql-parser";
 import { Parser as OracleParser } from "oracle-sql-parser";
@@ -25,12 +18,7 @@ import {
   useViews,
 } from "../../../hooks";
 import { isRtl } from "../../../i18n/utils/rtl";
-import { useExtensions } from "../../../context/ExtensionsContext";
 import { importSQL } from "../../../utils/importSQL";
-import {
-  allowedTypesFor,
-  normalizeAiDiagram,
-} from "../../../utils/importAiDiagram";
 import {
   getModalTitle,
   getModalWidth,
@@ -39,7 +27,6 @@ import {
 import CodeEditor from "../../CodeEditor";
 import ImportDiagram from "./ImportDiagram";
 import ImportSource from "./ImportSource";
-import ImportWithAiButton from "./ImportWithAiButton";
 import Language from "./Language";
 import New from "./New";
 import Open from "./Open";
@@ -90,9 +77,7 @@ export default function Modal({
   const [selectedTemplateId, setSelectedTemplateId] = useState(-1);
   const [selectedDiagramId, setSelectedDiagramId] = useState(0);
   const [saveAsTitle, setSaveAsTitle] = useState(title);
-  const [aiImporting, setAiImporting] = useState(false);
   const navigate = useNavigateWithParams();
-  const { importSqlWithAi } = useExtensions();
 
   useEffect(() => {
     if (modal === MODAL.SAVEAS) setSaveAsTitle(title);
@@ -193,41 +178,6 @@ export default function Modal({
     setRedoStack([]);
 
     setModal(MODAL.NONE);
-  };
-
-  const importSourceWithAi = async () => {
-    setAiImporting(true);
-    try {
-      const result = await importSqlWithAi({
-        sql: importSource.src,
-        database: database === DB.GENERIC ? importDb : database,
-        allowedTypes: allowedTypesFor(database),
-      });
-
-      if (!result) return;
-
-      const { diagram, warnings } = normalizeAiDiagram(
-        result.diagram,
-        database,
-      );
-      const allWarnings = [...(result.warnings ?? []), ...warnings];
-
-      applyImportedDiagram(diagram);
-
-      if (allWarnings.length) {
-        Toast.warning({
-          content: allWarnings.slice(0, 3).join(" "),
-          duration: 8,
-        });
-      }
-    } catch (e) {
-      setError({
-        type: STATUS.ERROR,
-        message: e?.message || t("ai_import_failed"),
-      });
-    } finally {
-      setAiImporting(false);
-    }
   };
 
   const getModalOnOk = async () => {
@@ -398,38 +348,12 @@ export default function Modal({
     (modal === MODAL.SAVEAS && saveAsTitle === "") ||
     (modal === MODAL.IMPORT_SRC && importSource.src === "");
 
-  const showAiFooter =
-    modal === MODAL.IMPORT_SRC && typeof importSqlWithAi === "function";
-
-  const aiFooter = (
-    <div className="flex items-center justify-between">
-      <div>
-        {error.type === STATUS.ERROR && (
-          <ImportWithAiButton
-            loading={aiImporting}
-            disabled={!importSource.src}
-            onClick={importSourceWithAi}
-          />
-        )}
-      </div>
-      <div>
-        <Button type="tertiary" autoFocus onClick={handleCancel}>
-          {t("cancel")}
-        </Button>
-        <Button theme="solid" disabled={okDisabled} onClick={getModalOnOk}>
-          {getOkText(modal)}
-        </Button>
-      </div>
-    </div>
-  );
-
   return (
     <SemiUIModal
       style={isRtl(i18n.language) ? { direction: "rtl" } : {}}
       title={getModalTitle(modal)}
       visible={modal !== MODAL.NONE && modal !== MODAL.CONFIG_CUSTOM_TYPES}
       onOk={getModalOnOk}
-      {...(showAiFooter ? { footer: aiFooter } : {})}
       afterClose={() => {
         setExportData(() => ({
           data: "",

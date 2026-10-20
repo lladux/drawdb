@@ -28,7 +28,6 @@ import { databases } from "../../../data/databases";
 import { MODAL } from "../../../data/constants";
 import { create, patch, SHARE_FILENAME } from "../../../api/gists";
 import { getCustomTypes } from "../../../utils/customTypes";
-import { Slot, useExtensions } from "../../../context/ExtensionsContext";
 import { queryConfig } from "../../../utils/queryConfig";
 
 export default function Share({ title, setModal }) {
@@ -43,9 +42,6 @@ export default function Share({ title, setModal }) {
   const { views } = useViews();
   const { transform } = useTransform();
   const [error, setError] = useState(null);
-
-  const extensions = useExtensions();
-  const customContent = extensions?.["share-modal-content"];
 
   const [embedSettings, setEmbedSettings] = useState({
     theme: null,
@@ -124,10 +120,6 @@ export default function Share({ title, setModal }) {
   }, [gistId, setModal, setGistId]);
 
   useEffect(() => {
-    if (customContent) {
-      setLoading(false);
-      return;
-    }
     const updateOrGenerateLink = async () => {
       try {
         setLoading(true);
@@ -158,13 +150,8 @@ export default function Share({ title, setModal }) {
       });
   };
 
-  if (customContent) {
-    return <div>{customContent}</div>;
-  }
-
   return (
     <div>
-      <Slot name="share-modal-top" />
       {loading && (
         <div className="text-blue-500 text-center">
           <Spin size="middle" />

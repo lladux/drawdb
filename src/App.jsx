@@ -6,33 +6,21 @@ import Templates from "./pages/Templates";
 import Hub from "./pages/Hub";
 import SettingsContextProvider from "./context/SettingsContext";
 import NotFound from "./pages/NotFound";
-import MigrationBanner, { isLegacyHost } from "./components/MigrationBanner";
 
 export default function App() {
-  const routes = (
-    <Routes>
-      <Route path="/" element={<Hub />} />
-      <Route path="/editor" element={<Editor />} />
-      <Route path="/editor/diagrams/:id" element={<Editor />} />
-      <Route path="/editor/templates/:id" element={<Editor />} />
-      <Route path="/bug-report" element={<BugReport />} />
-      <Route path="/templates" element={<Templates />} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  );
-
   return (
     <BrowserRouter>
       <SettingsContextProvider>
         <RestoreScroll />
-        {isLegacyHost() ? (
-          <div className="h-full flex flex-col">
-            <MigrationBanner />
-            <div className="flex-1 min-h-0">{routes}</div>
-          </div>
-        ) : (
-          routes
-        )}
+        <Routes>
+          <Route path="/" element={<Hub />} />
+          <Route path="/editor" element={<Editor />} />
+          <Route path="/editor/diagrams/:id" element={<Editor />} />
+          <Route path="/editor/templates/:id" element={<Editor />} />
+          <Route path="/bug-report" element={<BugReport />} />
+          <Route path="/templates" element={<Templates />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
       </SettingsContextProvider>
     </BrowserRouter>
   );

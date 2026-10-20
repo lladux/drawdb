@@ -30,8 +30,7 @@ function InfoBanner({ type, children }) {
 
 export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
   const { t } = useTranslation();
-  const { loading, error, cloud, local, cloudEnabled, currentUserId } =
-    useDiagramList();
+  const { loading, error, cloud, local } = useDiagramList();
 
   const [query, setQuery] = useState("");
   const [database, setDatabase] = useState(ALL);
@@ -45,22 +44,12 @@ export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
   };
 
   const diagrams = useMemo(() => mergeDiagrams(cloud, local), [cloud, local]);
-  const dbOptions = useMemo(
-    () => databaseOptions(diagrams, t),
-    [diagrams, t],
-  );
+  const dbOptions = useMemo(() => databaseOptions(diagrams, t), [diagrams, t]);
   const visible = useMemo(
     () =>
       sortDiagrams(filterDiagrams(diagrams, { query, database, source }), sort),
     [diagrams, query, database, source, sort],
   );
-
-  const showOwner =
-    cloudEnabled &&
-    visible.some(
-      (entry) =>
-        entry.owner && String(entry.owner.id) !== String(currentUserId),
-    );
 
   if (loading) {
     return (
@@ -86,7 +75,6 @@ export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
         databaseOptions={dbOptions}
         source={source}
         onSourceChange={setSource}
-        showSourceFilter={cloudEnabled}
         onClear={clearFilters}
       />
       <div className="max-h-[360px] overflow-auto">
@@ -97,9 +85,6 @@ export default function Open({ selectedDiagramId, setSelectedDiagramId }) {
             onSort={(key) => setSort((current) => nextSort(current, key))}
             selectedDiagramId={selectedDiagramId}
             onSelect={setSelectedDiagramId}
-            showType={cloudEnabled}
-            showOwner={showOwner}
-            currentUserId={currentUserId}
           />
         ) : (
           <div className="text-sm text-zinc-500 dark:text-zinc-400 px-1 py-6 text-center">

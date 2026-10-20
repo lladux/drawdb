@@ -3,7 +3,6 @@ import { useSettings } from "../../../hooks";
 import { useLiveQuery } from "dexie-react-hooks";
 import Thumbnail from "../../Thumbnail";
 import { useTranslation } from "react-i18next";
-import { Slot } from "../../../context/ExtensionsContext";
 
 export default function New({ selectedTemplateId, setSelectedTemplateId }) {
   const { settings } = useSettings();
@@ -15,7 +14,9 @@ export default function New({ selectedTemplateId, setSelectedTemplateId }) {
       <div onClick={() => setSelectedTemplateId("blank")}>
         <div
           className={`rounded-md h-[180px] border-2 hover:border-dashed ${
-            selectedTemplateId === "blank" ? "border-blue-400" : "border-zinc-400"
+            selectedTemplateId === "blank"
+              ? "border-blue-400"
+              : "border-zinc-400"
           }`}
         >
           <Thumbnail i="blank" diagram={{}} zoom={0.24} theme={settings.mode} />
@@ -44,7 +45,6 @@ export default function New({ selectedTemplateId, setSelectedTemplateId }) {
           <div className="text-center mt-1">{temp.title}</div>
         </div>
       ))}
-      <Slot name="new-diagram-end" />
     </div>
   );
 }

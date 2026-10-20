@@ -9,7 +9,7 @@ import {
 } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ControlPanel from "./EditorHeader/ControlPanel";
-import ExtensionsContext, { Slot } from "../context/ExtensionsContext";
+import ExtensionsContext from "../context/ExtensionsContext";
 import Canvas from "./EditorCanvas/Canvas";
 import { CanvasContextProvider } from "../context/CanvasContext";
 import SidePanel from "./EditorSidePanel/SidePanel";
@@ -101,7 +101,6 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
   const navigate = useNavigateWithParams();
   const extensionValues = useContext(ExtensionsContext);
   const extensions = useMemo(() => extensionValues ?? {}, [extensionValues]);
-  const cloudOnly = typeof extensions.cloudSave === "function";
   const cloudLoad = extensions.cloudLoad;
 
   const handleResize = (e) => {
@@ -150,7 +149,9 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setSearchParams(searchParams, { replace: true });
     }
 
-    if (cloudOnly && diagramSource !== "local") {
+    // Diagrams still in IndexedDB from before server storage are saved
+    // there until moved to the server.
+    if (diagramSource !== "local") {
       const isNew =
         !loadedDiagramId || loadedDiagramId === "blank" || isTemplate;
       const targetId = isNew
@@ -166,70 +167,36 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
         setLastSaved(new Date().toLocaleString());
       } catch (err) {
         console.warn("cloud autosave failed:", err);
-        if (err?.response?.status === 402) {
-          setSaveState(State.NONE);
-          navigate("/checkout?tier=solo_pro");
-          return;
-        }
         setSaveState(State.ERROR);
       }
       return;
     }
 
-    if (isTemplate || (!loadedDiagramId && !isTemplate && !isDiagram)) {
-      const diagramId = uuidv4();
-      await db.diagrams
-        .add({
-          diagramId,
-          database: database,
-          name: title,
-          gistId: gistId ?? "",
-          lastModified: new Date(),
-          tables: tables,
-          references: relationships,
-          notes: notes,
-          areas: areas,
-          views: views,
-          sqlHeader: sqlHeader,
-          pan: transform.pan,
-          zoom: transform.zoom,
-          loadedFromGistId: loadedFromGistId,
-          ...(databases[database].hasEnums && { enums: enums }),
-          ...(databases[database].hasTypes && { types: types }),
-        })
-        .then(() => {
-          navigate(`/editor/diagrams/${diagramId}`, { replace: true });
-          setSaveState(State.SAVED);
-          setLastSaved(new Date().toLocaleString());
-        });
-    } else {
-      await db.diagrams
-        .where("diagramId")
-        .equals(loadedDiagramId)
-        .modify({
-          database: database,
-          name: title,
-          lastModified: new Date(),
-          tables: tables,
-          references: relationships,
-          notes: notes,
-          areas: areas,
-          views: views,
-          sqlHeader: sqlHeader,
-          gistId: gistId ?? "",
-          pan: transform.pan,
-          zoom: transform.zoom,
-          loadedFromGistId: loadedFromGistId,
-          ...(databases[database].hasEnums && { enums: enums }),
-          ...(databases[database].hasTypes && { types: types }),
-        })
-        .then(() => {
-          setSaveState(State.SAVED);
-          setLastSaved(new Date().toLocaleString());
-        });
-    }
+    await db.diagrams
+      .where("diagramId")
+      .equals(loadedDiagramId)
+      .modify({
+        database: database,
+        name: title,
+        lastModified: new Date(),
+        tables: tables,
+        references: relationships,
+        notes: notes,
+        areas: areas,
+        views: views,
+        sqlHeader: sqlHeader,
+        gistId: gistId ?? "",
+        pan: transform.pan,
+        zoom: transform.zoom,
+        loadedFromGistId: loadedFromGistId,
+        ...(databases[database].hasEnums && { enums: enums }),
+        ...(databases[database].hasTypes && { types: types }),
+      })
+      .then(() => {
+        setSaveState(State.SAVED);
+        setLastSaved(new Date().toLocaleString());
+      });
   }, [
-    cloudOnly,
     diagramSource,
     buildCloudPayload,
     extensions,
@@ -250,14 +217,13 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     enums,
     gistId,
     loadedFromGistId,
-    isDiagram,
     isTemplate,
     loadedDiagramId,
     navigate,
   ]);
 
   const moveToCloud = useCallback(async () => {
-    if (typeof extensions.cloudSave !== "function" || !loadedDiagramId) return;
+    if (!loadedDiagramId) return;
     setSaveState(State.SAVING);
     try {
       await extensions.cloudSave(buildCloudPayload(loadedDiagramId), {
@@ -265,9 +231,7 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       });
       await db.diagrams.where("diagramId").equals(loadedDiagramId).delete();
       setDiagramSource("cloud");
-      if (typeof cloudLoad === "function") {
-        await cloudLoad(loadedDiagramId);
-      }
+      await cloudLoad(loadedDiagramId);
       setSaveState(State.SAVED);
       setLastSaved(new Date().toLocaleString());
     } catch (err) {
@@ -294,10 +258,8 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
         .first();
       if (localDiagram) return { diagram: localDiagram, source: "local" };
 
-      if (typeof cloudLoad === "function") {
-        const cloudDiagram = await cloudLoad(id);
-        if (cloudDiagram) return { diagram: cloudDiagram, source: "cloud" };
-      }
+      const cloudDiagram = await cloudLoad(id);
+      if (cloudDiagram) return { diagram: cloudDiagram, source: "cloud" };
       return { diagram: null, source: null };
     };
 
@@ -334,23 +296,6 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
       setLoadedFromGistId("");
       setLayout((prev) => ({ ...prev, readOnly: false }));
       setDiagramSource(null);
-    };
-
-    const loadLatestDiagram = async () => {
-      let diagram;
-      try {
-        diagram = await db.diagrams.orderBy("lastModified").last();
-      } catch (error) {
-        console.log(error);
-        return;
-      }
-      if (!diagram) {
-        if (selectedDb === "") setShowSelectDbModal(true);
-        return;
-      }
-      setDiagramSource("local");
-      applyDiagramState(diagram);
-      navigate(`/editor/diagrams/${diagram.diagramId}`, { replace: true });
     };
 
     const loadDiagram = async (id) => {
@@ -434,12 +379,8 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     }
 
     if (!loadedDiagramId) {
-      if (cloudOnly) {
-        if (previousLoadedId != null) resetEditorState();
-        if (selectedDb === "") setShowSelectDbModal(true);
-        return;
-      }
-      await loadLatestDiagram();
+      if (previousLoadedId != null) resetEditorState();
+      if (selectedDb === "") setShowSelectDbModal(true);
       return;
     }
 
@@ -474,7 +415,6 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
     isDiagram,
     isTemplate,
     loadedDiagramId,
-    cloudOnly,
   ]);
 
   const returnToCurrentDiagram = async () => {
@@ -557,7 +497,6 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
           <CanvasContextProvider className="h-full w-full">
             <Canvas saveState={saveState} setSaveState={setSaveState} />
           </CanvasContextProvider>
-          <Slot name="canvas-overlay" />
           {layout.toolbar && (
             <div
               ref={setToolbarContainer}
@@ -581,21 +520,14 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
               </Button>
             </div>
           )}
-          {(cloudOnly || typeof extensions.moveToCloudUpgrade === "function") &&
-            diagramSource === "local" &&
+          {diagramSource === "local" &&
             !version &&
             !dismissedBanners.has(`move:${loadedDiagramId}`) && (
               <div className="pointer-events-none absolute inset-x-0 top-3 z-50 flex justify-center">
                 <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-blue-300 bg-blue-50 px-5 py-1.5 shadow-md dark:border-sky-900/50 dark:bg-sky-900/30">
                   <i className="bi bi-hdd" />
                   <span className="text-sm">{t("move_to_cloud_prompt")}</span>
-                  <Button
-                    size="small"
-                    theme="solid"
-                    onClick={
-                      cloudOnly ? moveToCloud : extensions.moveToCloudUpgrade
-                    }
-                  >
+                  <Button size="small" theme="solid" onClick={moveToCloud}>
                     {t("move")}
                   </Button>
                   <Button
@@ -615,7 +547,6 @@ export default function WorkSpace({ forcedDiagramId } = {}) {
             </div>
           )}
         </div>
-        <Slot name="right-panel" />
       </div>
       <Modal
         centered

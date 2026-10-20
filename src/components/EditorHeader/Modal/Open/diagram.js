@@ -17,21 +17,6 @@ export function databaseName(database, t) {
   return databases[database]?.name ?? t("generic");
 }
 
-export function isOwnEntry(entry, currentUserId) {
-  return Boolean(
-    entry.owner &&
-      currentUserId &&
-      String(entry.owner.id) === String(currentUserId),
-  );
-}
-
-export function ownerLabel(entry, currentUserId, t) {
-  const { owner } = entry;
-  if (!owner) return null;
-  if (isOwnEntry(entry, currentUserId)) return t("you");
-  return owner.username || owner.email || t("user_with_id", { id: owner.id });
-}
-
 function toDate(value) {
   if (value instanceof Date) return value;
   return value ? new Date(value) : null;
@@ -44,7 +29,6 @@ function toEntry(raw, source, size) {
     diagramId: raw.diagramId,
     name: raw.name ?? "",
     database: raw.database || "generic",
-    owner: source === SOURCE.cloud ? (raw.owner ?? null) : null,
     size,
     lastModified: toDate(raw.lastModified),
   };
@@ -53,9 +37,7 @@ function toEntry(raw, source, size) {
 export function mergeDiagrams(cloud, local) {
   return [
     ...cloud.map((d) => toEntry(d, SOURCE.cloud, d.sizeBytes ?? 0)),
-    ...local.map((d) =>
-      toEntry(d, SOURCE.local, JSON.stringify(d).length),
-    ),
+    ...local.map((d) => toEntry(d, SOURCE.local, JSON.stringify(d).length)),
   ];
 }
 

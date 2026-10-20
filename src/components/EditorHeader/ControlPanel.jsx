@@ -1,6 +1,6 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { Slot, useExtensions } from "../../context/ExtensionsContext";
+import { useExtensions } from "../../context/ExtensionsContext";
 import { createPortal } from "react-dom";
 import {
   IconCaretdown,
@@ -1050,47 +1050,38 @@ export default function ControlPanel({
     setLayout((prev) => ({ ...prev, dbmlEditor: !prev.dbmlEditor }));
   };
   const save = async () => {
-    if (typeof extensions.cloudSave === "function") {
-      // TODO: dont have blank here have null
-      const isNew = diagramId === "blank";
-      const newId = isNew ? uuidv4() : diagramId;
-      const diagramData = {
-        diagramId: newId,
-        database,
-        name: title,
-        gistId: gistId ?? "",
-        lastModified: new Date(),
-        tables,
-        references: relationships,
-        notes,
-        areas,
-        views,
-        sqlHeader,
-        pan: transform.pan,
-        zoom: transform.zoom,
-        ...(databases[database].hasEnums && { enums }),
-        ...(databases[database].hasTypes && { types }),
-      };
-      try {
-        await extensions.cloudSave(diagramData, { isNew });
-        if (isNew) {
-          navigate(`/editor/diagrams/${newId}`, { replace: true });
-        }
-        setSaveState(State.SAVED);
-        if (typeof setLastSaved === "function") {
-          setLastSaved(new Date().toLocaleString());
-        }
-      } catch (err) {
-        if (err?.response?.status === 402) {
-          setSaveState(State.NONE);
-          navigate("/checkout?tier=solo_pro");
-          return;
-        }
-        setSaveState(State.ERROR);
+    // TODO: dont have blank here have null
+    const isNew = diagramId === "blank";
+    const newId = isNew ? uuidv4() : diagramId;
+    const diagramData = {
+      diagramId: newId,
+      database,
+      name: title,
+      gistId: gistId ?? "",
+      lastModified: new Date(),
+      tables,
+      references: relationships,
+      notes,
+      areas,
+      views,
+      sqlHeader,
+      pan: transform.pan,
+      zoom: transform.zoom,
+      ...(databases[database].hasEnums && { enums }),
+      ...(databases[database].hasTypes && { types }),
+    };
+    try {
+      await extensions.cloudSave(diagramData, { isNew });
+      if (isNew) {
+        navigate(`/editor/diagrams/${newId}`, { replace: true });
       }
-      return;
+      setSaveState(State.SAVED);
+      if (typeof setLastSaved === "function") {
+        setLastSaved(new Date().toLocaleString());
+      }
+    } catch (err) {
+      setSaveState(State.ERROR);
     }
-    setSaveState(State.SAVING);
   };
   const { cloud, local } = useDiagramList();
   const recentlyOpenedDiagrams = useMemo(() => {
@@ -1133,28 +1124,12 @@ export default function ControlPanel({
       ...(databases[database].hasTypes && { types }),
     };
 
-    if (typeof extensions.cloudSave === "function") {
-      try {
-        await extensions.cloudSave(diagramData, { isNew: true });
-      } catch (err) {
-        if (err?.response?.status === 402) {
-          setSaveState(State.NONE);
-          navigate("/checkout?tier=solo_pro");
-          return;
-        }
-        setSaveState(State.ERROR);
-        Toast.error(t("oops_smth_went_wrong"));
-        return;
-      }
-    } else {
-      try {
-        await db.diagrams.add(diagramData);
-      } catch (err) {
-        console.error(err);
-        setSaveState(State.ERROR);
-        Toast.error(t("oops_smth_went_wrong"));
-        return;
-      }
+    try {
+      await extensions.cloudSave(diagramData, { isNew: true });
+    } catch (err) {
+      setSaveState(State.ERROR);
+      Toast.error(t("oops_smth_went_wrong"));
+      return;
     }
 
     let toastId;
@@ -1272,11 +1247,7 @@ export default function ControlPanel({
         },
         function: async () => {
           try {
-            if (typeof extensions.cloudDelete === "function") {
-              await extensions.cloudDelete(diagramId);
-            } else {
-              await db.diagrams.where("diagramId").equals(diagramId).delete();
-            }
+            await extensions.cloudDelete(diagramId);
             setTitle("Untitled diagram");
             setTables([]);
             setRelationships([]);
@@ -2023,7 +1994,6 @@ export default function ControlPanel({
           >
             {header()}
             <div className="flex items-center gap-2 me-7">
-              <Slot name="header-actions-start" />
               {!isTemplate && (
                 <Button
                   type="primary"
@@ -2035,7 +2005,6 @@ export default function ControlPanel({
                   {t("share")}
                 </Button>
               )}
-              <Slot name="header-actions-end" />
             </div>
           </div>
         )}
@@ -2329,7 +2298,6 @@ export default function ControlPanel({
                   })}
                 />
               )}
-              <Slot name="diagram-title-prefix" />
               <div
                 className="text-xl flex items-center gap-1 me-1"
                 onPointerEnter={(e) => e.isPrimary && setShowEditName(true)}

@@ -11,7 +11,6 @@ export default function DiagramFilters({
   databaseOptions,
   source,
   onSourceChange,
-  showSourceFilter,
   onClear,
 }) {
   const { t } = useTranslation();
@@ -39,14 +38,12 @@ export default function DiagramFilters({
         optionList={databaseOptions}
         className="min-w-[150px]"
       />
-      {showSourceFilter && (
-        <Select
-          value={source}
-          onChange={onSourceChange}
-          optionList={sourceOptions}
-          className="min-w-[130px]"
-        />
-      )}
+      <Select
+        value={source}
+        onChange={onSourceChange}
+        optionList={sourceOptions}
+        className="min-w-[130px]"
+      />
       {hasActiveFilters && (
         <Button theme="borderless" onClick={onClear}>
           {t("clear")}

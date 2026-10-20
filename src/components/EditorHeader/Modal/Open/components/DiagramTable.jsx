@@ -1,13 +1,7 @@
 import { Tag } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
 import SortableHeader from "./SortableHeader";
-import {
-  SOURCE,
-  databaseName,
-  formatSize,
-  isOwnEntry,
-  ownerLabel,
-} from "../diagram";
+import { SOURCE, databaseName, formatSize } from "../diagram";
 
 function TypeCell({ entry }) {
   const { t } = useTranslation();
@@ -19,25 +13,13 @@ function TypeCell({ entry }) {
   );
 }
 
-function OwnerCell({ entry, currentUserId }) {
-  const { t } = useTranslation();
-  if (isOwnEntry(entry, currentUserId)) {
-    return (
-      <Tag size="small" color="blue">
-        {t("you")}
-      </Tag>
-    );
-  }
-  return (
-    <span className="text-sm">{ownerLabel(entry, currentUserId, t)}</span>
-  );
-}
-
 function formatTimestamp(date) {
-  return date ? `${date.toLocaleDateString()} ${date.toLocaleTimeString()}` : "";
+  return date
+    ? `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+    : "";
 }
 
-function useColumns({ showType, showOwner, currentUserId }) {
+function useColumns() {
   const { t } = useTranslation();
   return [
     {
@@ -46,12 +28,7 @@ function useColumns({ showType, showOwner, currentUserId }) {
       sortable: true,
       render: ({ entry }) => entry.name,
     },
-    showType && { key: "type", label: t("type"), render: TypeCell },
-    showOwner && {
-      key: "owner",
-      label: t("owner"),
-      render: (props) => <OwnerCell {...props} currentUserId={currentUserId} />,
-    },
+    { key: "type", label: t("type"), render: TypeCell },
     {
       key: "database",
       label: t("database"),
@@ -69,7 +46,7 @@ function useColumns({ showType, showOwner, currentUserId }) {
       sortable: true,
       render: ({ entry }) => formatSize(entry.size),
     },
-  ].filter(Boolean);
+  ];
 }
 
 export default function DiagramTable({
@@ -78,11 +55,8 @@ export default function DiagramTable({
   onSort,
   selectedDiagramId,
   onSelect,
-  showType,
-  showOwner,
-  currentUserId,
 }) {
-  const columns = useColumns({ showType, showOwner, currentUserId });
+  const columns = useColumns();
 
   return (
     <table className="w-full text-left border-separate border-spacing-x-0">
