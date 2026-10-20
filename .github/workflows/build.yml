@@ -18,13 +18,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - uses: pnpm/action-setup@v4
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - run: npm install
+        cache: 'pnpm'
+    - run: pnpm install --frozen-lockfile
     - name: Run eslint 
-      run: npm run lint
+      run: pnpm lint
     - name: Run vite build
-      run: npm run build
+      run: pnpm build

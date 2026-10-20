@@ -7,7 +7,7 @@ services:
     working_dir: /var/www/html
     volumes:
       - ./:/var/www/html
-    command: sh -c "npm install && npm run dev -- --host"
+    command: sh -c "corepack enable && pnpm install && pnpm dev --host"
     networks:
       - default
 

@@ -28,8 +28,8 @@ DrawDB is a robust and user-friendly database entity relationship diagram (ERD) 
 ```bash
 git clone https://github.com/drawdb-io/drawdb
 cd drawdb
-npm install
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 ### Build
@@ -37,8 +37,8 @@ npm run dev
 ```bash
 git clone https://github.com/drawdb-io/drawdb
 cd drawdb
-npm install
-npm run build
+pnpm install
+pnpm build
 ```
 
 ### Docker Build
@@ -61,4 +61,5 @@ docker run -p 3000:80 -e VITE_BACKEND_URL=https://your-drawdb-server.example.com
 Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines on how to contribute to this project.
 
 ## Support
+
 - Join discussions: [Discord](https://discord.gg/BrjZgNrmR6)

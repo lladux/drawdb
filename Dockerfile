@@ -1,11 +1,12 @@
 # Stage 1: Build the app
 FROM node:20-alpine AS build
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+RUN corepack enable
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+RUN pnpm install --frozen-lockfile
 COPY . .
 ENV NODE_OPTIONS="--max-old-space-size=4096"
-RUN npm run build
+RUN pnpm build
 
 # Stage 2: Setup the Nginx Server to serve the app
 FROM docker.io/library/nginx:stable-alpine3.23 AS production
