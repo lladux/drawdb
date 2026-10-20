@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-drawDB is a browser-only ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). No account or backend is needed; diagrams are stored locally in IndexedDB. An optional separate server ([drawdb-server](https://github.com/drawdb-io/drawdb-server)) is used only for sharing (gists).
+drawDB is a browser-only ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). No account or backend is needed; diagrams are stored locally in IndexedDB. An optional backend is used only for sharing (GitHub gists) and bug report emails. In this fork it lives in `server/`: a Python/FastAPI port of [drawdb-server](https://github.com/drawdb-io/drawdb-server).
 
 ## Commands
 
@@ -80,3 +80,20 @@ Mutators in the entity contexts (`addTable`, `updateTable`, `deleteTable`, …) 
 ### UI and i18n
 
 The UI uses Semi UI (`@douyinfe/semi-ui`) components and Toasts, Tailwind v4 for styling, and Monaco for code editors. All user-facing strings go through `react-i18next` `t(...)`. `src/i18n/locales/en.js` is the source locale; other locales are registered in `src/i18n/i18n.js` (both the import and the `languages` array). RTL handling is in `i18n/utils/rtl.js`. Add new keys to `en.js` at minimum; missing keys fall back to English.
+
+## Backend (`server/`)
+
+FastAPI app with its own venv; it is independent of the pnpm toolchain. See `server/README.md`.
+
+```bash
+cd server && python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
+.venv/bin/python -m app                      # run on $PORT (default 5000)
+.venv/bin/pytest                             # all tests
+.venv/bin/pytest tests/test_gists.py::test_revision
+.venv/bin/ruff check . && .venv/bin/ruff format --check .
+```
+
+- `app/main.py` `create_app(settings, github_transport)` is the app factory. Tests inject a `Settings` and an `httpx.MockTransport` fake of the GitHub API, so they never hit the network.
+- Routes and JSON shapes must stay compatible with `src/api/gists.js` and `src/api/email.js` on the frontend (and with the original Node server). `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
+- Env vars keep the original server's names (`CLIENT_URLS`, `GITHUB_TOKEN`, `MAIL_*`, `PORT`, `NODE_ENV=dev` for open CORS and reload).
+- The email route is a sync `def` on purpose, so FastAPI runs the blocking SMTP calls in a thread pool.

@@ -6,7 +6,7 @@
 <h3 align="center">Free, simple, and intuitive database schema editor and SQL generator.</h3>
 
 > [!NOTE]
-> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm. Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
+> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm and porting the backend to Python (`server/`). Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
 
 <div align="center" style="margin-bottom:12px;">
     <a href="https://drawdb.app/" style="display: flex; align-items: center;">
@@ -51,7 +51,7 @@ docker build -t drawdb .
 docker run -p 3000:80 drawdb
 ```
 
-If you want to enable sharing, set up the [server](https://github.com/drawdb-io/drawdb-server) and environment variables according to `.env.sample`. This is optional unless you need to share files.
+If you want to enable sharing, run the Python backend in [`server/`](server/README.md) (a port of [drawdb-server](https://github.com/drawdb-io/drawdb-server)) and set the environment variables according to `.env.sample`. This is optional unless you need to share files.
 
 With the Docker image, pass the server URL when starting the container. No rebuild is needed:
 

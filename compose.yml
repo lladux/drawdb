@@ -11,6 +11,16 @@ services:
     networks:
       - default
 
+  server:
+    build: ./server
+    container_name: drawdb-server
+    ports:
+      - 5000:5000
+    env_file:
+      - ./server/.env
+    networks:
+      - default
+
 networks:
   default:
     driver: bridge
