@@ -56,7 +56,7 @@ If you want to enable sharing, run the Python backend in [`server/`](server/READ
 With the Docker image, pass the server URL when starting the container. No rebuild is needed:
 
 ```bash
-docker run -p 3000:80 -e VITE_BACKEND_URL=https://your-drawdb-server.example.com ghcr.io/drawdb-io/drawdb:latest
+docker run -p 3000:80 -e VITE_BACKEND_URL=https://your-drawdb-server.example.com drawdb
 ```
 
 ## Contributing

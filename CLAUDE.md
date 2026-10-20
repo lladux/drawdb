@@ -20,7 +20,7 @@ pnpm preview   # serve the built bundle
 
 Dependency build scripts are blocked unless listed under `allowBuilds` in `pnpm-workspace.yaml` (`@tailwindcss/oxide` and `core-js` are explicitly denied; neither is needed).
 
-There is no test suite. CI (`.github/workflows/build.yml`) runs `pnpm lint` and `pnpm build` on Node 20 and 22, so both must pass. A Husky pre-commit hook runs `pnpm exec lint-staged` (ESLint `--fix` + Prettier on staged files).
+There is no test suite and no CI; check changes with `pnpm lint` and `pnpm build` locally. A Husky pre-commit hook runs `pnpm exec lint-staged` (ESLint `--fix` + Prettier on staged files).
 
 Docker: `docker build -t drawdb . && docker run -p 3000:80 drawdb`. The image serves `dist/` via nginx and generates `/config.js` at runtime from `VITE_BACKEND_URL` / `VITE_GIST_BACKEND_URL`, which sets `window.__DRAWDB_CONFIG__`. `src/config/index.js` resolves the backend URL in this order: runtime config, then the Vite env var (`.env`, see `.env.sample`), then `http://localhost:5000`.
 
