@@ -8,7 +8,7 @@ def main():
     uvicorn.run(
         "app.main:create_app",
         factory=True,
-        host="0.0.0.0",
+        host=settings.host,
         port=settings.port,
         reload=settings.dev,
     )

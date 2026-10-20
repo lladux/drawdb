@@ -11,6 +11,8 @@ import SaveStateContextProvider from "../context/SaveStateContext";
 import EnumsContextProvider from "../context/EnumsContext";
 import ViewsContextProvider from "../context/ViewsContext";
 import WorkSpace from "../components/Workspace";
+import ExtensionsContext from "../context/ExtensionsContext";
+import { serverStorage } from "../api/diagrams";
 import { useThemedPage } from "../hooks";
 
 export default function Editor() {
@@ -29,7 +31,9 @@ export default function Editor() {
                       <ViewsContextProvider>
                         <TablesContextProvider>
                           <SaveStateContextProvider>
-                            <WorkSpace />
+                            <ExtensionsContext.Provider value={serverStorage}>
+                              <WorkSpace />
+                            </ExtensionsContext.Provider>
                           </SaveStateContextProvider>
                         </TablesContextProvider>
                       </ViewsContextProvider>

@@ -1,11 +1,8 @@
 import base64
 
 import pytest
-from fastapi.testclient import TestClient
 
 from app import mail
-from app.config import Settings
-from app.main import create_app
 
 
 @pytest.fixture
@@ -13,13 +10,6 @@ def sent(monkeypatch):
     calls = []
     monkeypatch.setattr(mail, "send_email", lambda *args: calls.append(args))
     return calls
-
-
-@pytest.fixture
-def client():
-    settings = Settings(mail_username="me@example.com", mail_host="smtp.example.com")
-    with TestClient(create_app(settings)) as c:
-        yield c
 
 
 def test_send_wraps_message_and_decodes_attachments(client, sent):

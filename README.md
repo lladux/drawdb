@@ -6,7 +6,7 @@
 <h3 align="center">Free, simple, and intuitive database schema editor and SQL generator.</h3>
 
 > [!NOTE]
-> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm and porting the backend to Python (`server/`). Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
+> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm and porting the backend to Python with SQLite storage (`server/`). Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
 
 <div align="center" style="margin-bottom:12px;">
     <a href="https://drawdb.app/" style="display: flex; align-items: center;">
@@ -44,7 +44,7 @@ pnpm install
 pnpm build
 ```
 
-If you want to enable sharing, run the Python backend in [`server/`](server/README.md) (a port of [drawdb-server](https://github.com/drawdb-io/drawdb-server)) and set the environment variables according to `.env.sample`. This is optional unless you need to share files.
+In this fork, diagrams, sharing and version history are stored in SQLite by the Python backend in [`server/`](server/README.md), so it must be running for the editor to save. See its README for setup. Set `VITE_BACKEND_URL` (see `.env.sample`) if it isn't on `http://localhost:5000`.
 
 ## Contributing
 

@@ -363,7 +363,7 @@ const en = {
     edit_dbml: "Edit DBML",
     dbml_problem: "Ln {{line}}, Col {{column}}: {{message}}",
     move_to_cloud_prompt:
-      "This diagram is stored locally on your browser. Move it to the cloud?",
+      "This diagram is stored locally on your browser. Move it to the server?",
     move: "Move",
     dismiss: "Dismiss",
     view_actions: "View actions",
@@ -399,7 +399,7 @@ const en = {
     all: "All",
     all_databases: "All databases",
     all_types: "All types",
-    cloud: "Cloud",
+    cloud: "Server",
     local: "Local",
     you: "You",
     owner: "Owner",

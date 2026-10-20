@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-drawDB is a browser-only ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). No account or backend is needed; diagrams are stored locally in IndexedDB. An optional backend is used only for sharing (GitHub gists) and bug report emails. In this fork it lives in `server/`: a Python/FastAPI port of [drawdb-server](https://github.com/drawdb-io/drawdb-server).
+drawDB is an ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). Upstream is browser-only and stores diagrams in IndexedDB. **In this fork, diagrams, sharing and version history are stored in SQLite by the Python/FastAPI backend in `server/`**, so the editor needs that server running. Templates stay in IndexedDB.
 
 ## Commands
 
@@ -49,9 +49,11 @@ Mutators in the entity contexts (`addTable`, `updateTable`, `deleteTable`, …) 
 
 ### Persistence and autosave
 
-`src/data/db.js` defines the Dexie (IndexedDB) database `drawDB` with `diagrams` and `templates` tables. Templates are seeded from `src/templates/` via `data/seeds.js`. A schema change requires bumping `db.version(...)` and adding an upgrade.
+Diagrams are saved to the backend through the editor's "cloud" extension hooks: `src/pages/Editor.jsx` provides `serverStorage` from `src/api/diagrams.js` (`cloudSave`/`cloudLoad`/`cloudList`/`cloudDelete`) via `ExtensionsContext`. With those hooks present, `Workspace.jsx`, `ControlPanel.jsx` (save, save as, delete) and the Open modal (`useDiagramList`) take their cloud code paths. In the UI these are labelled "Server". Diagrams that are still in IndexedDB from before show up as "Local", and a banner offers to move each one to the server.
 
-`Workspace.jsx` owns `save()`/`load()`. A `useEffect` watches the undo/redo stacks, entity counts, zoom, title, etc. When autosave is on, it sets `SaveState` to `State.SAVING`, and another effect then calls `save()`. Loading resolves from the route: diagram id, template id, a shared gist (`api/gists.js`), or the most recently modified diagram.
+`src/data/db.js` defines the Dexie (IndexedDB) database `drawDB`. It still holds `templates` (seeded from `src/templates/` via `data/seeds.js`) and any older local `diagrams`. A schema change requires bumping `db.version(...)` and adding an upgrade.
+
+`Workspace.jsx` owns `save()`/`load()`. A `useEffect` watches the undo/redo stacks, entity counts, zoom, title, etc. When autosave is on, it sets `SaveState` to `State.SAVING`, and another effect then calls `save()`. Loading resolves from the route: diagram id, template id, or a shared gist (`?shareId=`, `api/gists.js`). Sharing and version history use gists, which the backend now keeps in SQLite.
 
 ### Collaboration hooks
 
@@ -83,17 +85,19 @@ The UI uses Semi UI (`@douyinfe/semi-ui`) components and Toasts, Tailwind v4 for
 
 ## Backend (`server/`)
 
-FastAPI app with its own venv; it is independent of the pnpm toolchain. See `server/README.md`.
+FastAPI app with its own venv; it is independent of the pnpm toolchain. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `server/data/drawdb.sqlite3`). See `server/README.md` for the API.
 
 ```bash
 cd server && python3 -m venv .venv && .venv/bin/pip install -e '.[dev]'
 .venv/bin/python -m app                      # run on $PORT (default 5000)
 .venv/bin/pytest                             # all tests
-.venv/bin/pytest tests/test_gists.py::test_revision
+.venv/bin/pytest tests/test_gists.py::test_compare
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
 ```
 
-- `app/main.py` `create_app(settings, github_transport)` is the app factory. Tests inject a `Settings` and an `httpx.MockTransport` fake of the GitHub API, so they never hit the network.
-- Routes and JSON shapes must stay compatible with `src/api/gists.js` and `src/api/email.js` on the frontend (and with the original Node server). `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
-- Env vars keep the original server's names (`CLIENT_URLS`, `GITHUB_TOKEN`, `MAIL_*`, `PORT`, `NODE_ENV=dev` for open CORS and reload).
-- The email route is a sync `def` on purpose, so FastAPI runs the blocking SMTP calls in a thread pool.
+- `app/main.py` `create_app(settings)` is the app factory. Tests (`tests/conftest.py`) give each test its own temporary SQLite file.
+- `app/diagrams.py`: `/diagrams` CRUD. The full diagram JSON is stored in one column, with name, database, size and timestamps as columns for listing.
+- `app/gist_store.py`: a SQLite stand-in for the GitHub Gists API. Each change stores a full snapshot of the gist's files as a revision with a random 40-hex `version`, and an update that changes nothing creates no revision. `app/gists.py` serves it with GitHub-shaped JSON.
+- Routes and JSON shapes must stay compatible with `src/api/diagrams.js`, `src/api/gists.js` and `src/api/email.js`. `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
+- Env vars: `HOST` (default `127.0.0.1`; there is no auth), `PORT`, `DATABASE_PATH`, `CLIENT_URLS`, `MAIL_*`, and `NODE_ENV=dev` for open CORS and reload.
+- Routes that touch SQLite or SMTP are sync `def` on purpose, so FastAPI runs the blocking calls in a thread pool.

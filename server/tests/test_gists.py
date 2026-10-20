@@ -1,167 +1,125 @@
-import json
-
-import httpx
-import pytest
-from fastapi.testclient import TestClient
-
-from app.config import Settings
-from app.main import create_app
-
-
-class FakeGitHub:
-    """In-memory stand-in for the GitHub Gists API."""
-
-    def __init__(self):
-        self.requests: list[httpx.Request] = []
-        # Newest first, like GitHub. Each entry is (sha, {filename: content}).
-        self.history: list[tuple[str, dict[str, str]]] = []
-
-    def gist_body(self, files: dict[str, str]) -> dict:
-        return {
-            "id": "g1",
-            "owner": {"login": "me"},
-            "html_url": "https://gist.github.com/g1",
-            "description": "drawDB diagram",
-            "files": {
-                name: {"filename": name, "content": content, "raw_url": "https://raw"}
-                for name, content in files.items()
-            },
-        }
-
-    def handler(self, request: httpx.Request) -> httpx.Response:
-        self.requests.append(request)
-        parts = request.url.path.removeprefix("/gists").strip("/").split("/")
-        parts = [p for p in parts if p]
-
-        if request.method == "POST" and not parts:
-            body = json.loads(request.content)
-            files = {k: v["content"] for k, v in body["files"].items()}
-            return httpx.Response(201, json=self.gist_body(files))
-
-        if parts and parts[0] != "g1":
-            return httpx.Response(404, json={"message": "Not Found"})
-
-        if request.method == "DELETE":
-            return httpx.Response(204)
-
-        if request.method == "PATCH":
-            body = json.loads(request.content)
-            files = dict(self.history[0][1]) if self.history else {}
-            for name, file in body["files"].items():
-                if file is None:
-                    files.pop(name, None)
-                else:
-                    files[name] = file["content"]
-            return httpx.Response(200, json=self.gist_body(files))
-
-        if len(parts) == 1:
-            return httpx.Response(200, json=self.gist_body(self.history[0][1]))
-
-        if parts[1] == "commits":
-            per_page = int(request.url.params.get("per_page", 30))
-            page = int(request.url.params.get("page", 1))
-            chunk = self.history[(page - 1) * per_page : page * per_page]
-            return httpx.Response(
-                200,
-                json=[
-                    {"version": sha, "user": {}, "url": "u", "committed_at": "t"}
-                    for sha, _ in chunk
-                ],
-            )
-
-        for sha, files in self.history:
-            if sha == parts[1]:
-                return httpx.Response(200, json=self.gist_body(files))
-        return httpx.Response(404, json={"message": "Not Found"})
-
-
-@pytest.fixture
-def github():
-    return FakeGitHub()
-
-
-@pytest.fixture
-def client(github):
-    app = create_app(Settings(github_token="t"), httpx.MockTransport(github.handler))
-    with TestClient(app) as c:
-        yield c
-
-
-def test_create_returns_id_and_sends_token(client, github):
-    res = client.post("/gists", json={"filename": "share.json", "content": "{}", "public": False})
+def create(client, filename="share.json", content="{}"):
+    res = client.post("/gists", json={"filename": filename, "content": content, "public": False})
     assert res.status_code == 200
-    assert res.json()["data"]["id"] == "g1"
-    assert github.requests[0].headers["Authorization"] == "Bearer t"
+    return res.json()["data"]["id"]
 
 
-def test_get_strips_private_fields(client, github):
-    github.history = [("a", {"share.json": "{}"})]
-    data = client.get("/gists/g1").json()["data"]
-    assert "owner" not in data and "html_url" not in data
-    assert "raw_url" not in data["files"]["share.json"]
-    assert data["files"]["share.json"]["content"] == "{}"
+def patch(client, gist_id, filename, content=None):
+    body = {"filename": filename}
+    if content is not None:
+        body["content"] = content
+    return client.patch(f"/gists/{gist_id}", json=body)
 
 
-def test_get_missing_gist_is_404(client):
+def versions_of(client, gist_id, file, **params):
+    return client.get(f"/gists/{gist_id}/file-versions/{file}", params=params).json()
+
+
+def test_create_and_get(client):
+    gist_id = create(client, content='{"a":1}')
+    data = client.get(f"/gists/{gist_id}").json()["data"]
+    assert data["id"] == gist_id
+    assert data["files"]["share.json"]["content"] == '{"a":1}'
+    assert data["files"]["share.json"]["filename"] == "share.json"
+
+
+def test_missing_gist_is_404(client):
     res = client.get("/gists/nope")
     assert res.status_code == 404
     assert res.json() == {"success": False, "message": "Gist not found"}
+    assert patch(client, "nope", "f", "x").status_code == 404
+    assert client.delete("/gists/nope").status_code == 404
+    assert client.get("/gists/nope/commits").status_code == 404
 
 
-def test_update_without_content_removes_file_and_empty_gist(client, github):
-    github.history = [("a", {"share.json": "{}"})]
-    res = client.patch("/gists/g1", json={"filename": "share.json"})
+def test_update_adds_files_and_revisions(client):
+    gist_id = create(client)
+    patch(client, gist_id, "versionned.json", "v1")
+    files = client.get(f"/gists/{gist_id}").json()["data"]["files"]
+    assert set(files) == {"share.json", "versionned.json"}
+    assert len(client.get(f"/gists/{gist_id}/commits").json()["data"]) == 2
+
+
+def test_unchanged_update_creates_no_revision(client):
+    gist_id = create(client, content="same")
+    patch(client, gist_id, "share.json", "same")
+    assert len(client.get(f"/gists/{gist_id}/commits").json()["data"]) == 1
+
+
+def test_removing_last_file_deletes_gist(client):
+    gist_id = create(client)
+    res = patch(client, gist_id, "share.json")
     assert res.json()["deleted"] is True
-    assert json.loads(github.requests[0].content) == {"files": {"share.json": None}}
-    assert github.requests[1].method == "DELETE"
+    assert client.get(f"/gists/{gist_id}").status_code == 404
 
 
-def test_update_with_content_keeps_gist(client, github):
-    github.history = [("a", {"share.json": "{}"})]
-    res = client.patch("/gists/g1", json={"filename": "share.json", "content": "[]"})
+def test_removing_one_file_keeps_gist(client):
+    gist_id = create(client)
+    patch(client, gist_id, "versionned.json", "v1")
+    res = patch(client, gist_id, "share.json")
     assert res.json()["deleted"] is False
-    assert len(github.requests) == 1
+    files = client.get(f"/gists/{gist_id}").json()["data"]["files"]
+    assert set(files) == {"versionned.json"}
 
 
-def test_commits_route_is_not_shadowed_by_revision_route(client, github):
-    github.history = [("b", {"f": "2"}), ("a", {"f": "1"})]
-    data = client.get("/gists/g1/commits", params={"per_page": 1, "page": 2}).json()["data"]
-    assert data == [{"version": "a", "committed_at": "t"}]
+def test_commits_are_newest_first_and_paginated(client):
+    gist_id = create(client, content="1")
+    patch(client, gist_id, "share.json", "1\n2")
+    commits = client.get(f"/gists/{gist_id}/commits").json()["data"]
+    assert commits[0]["change_status"] == {"total": 1, "additions": 1, "deletions": 0}
+    assert len(commits[0]["version"]) == 40
+
+    page2 = client.get(f"/gists/{gist_id}/commits", params={"per_page": 1, "page": 2}).json()
+    assert [c["version"] for c in page2["data"]] == [commits[1]["version"]]
 
 
-def test_revision(client, github):
-    github.history = [("b", {"f": "2"}), ("a", {"f": "1"})]
-    data = client.get("/gists/g1/a").json()["data"]
-    assert data["files"]["f"]["content"] == "1"
+def test_get_revision(client):
+    gist_id = create(client, content="old")
+    first = client.get(f"/gists/{gist_id}/commits").json()["data"][0]["version"]
+    patch(client, gist_id, "share.json", "new")
+    data = client.get(f"/gists/{gist_id}/{first}").json()["data"]
+    assert data["files"]["share.json"]["content"] == "old"
+    assert client.get(f"/gists/{gist_id}/{'0' * 40}").status_code == 404
 
 
-def test_file_versions_skips_unchanged_and_stops_before_file_existed(client, github):
-    github.history = [
-        ("e", {"v.json": "3"}),
-        ("d", {"v.json": "2", "other": "x"}),
-        ("c", {"v.json": "2"}),
-        ("b", {"v.json": "1"}),
-        ("a", {"other": "x"}),
-    ]
-    body = client.get("/gists/g1/file-versions/v.json").json()
-    assert [v["version"] for v in body["data"]] == ["e", "d", "b"]
+def test_file_versions_skip_unchanged_and_stop_before_file_existed(client):
+    gist_id = create(client, filename="other", content="x")
+    for content in ["1", "2", "2", "3"]:
+        patch(client, gist_id, "v.json", content)
+    patch(client, gist_id, "other", "y")  # touches only the other file
+
+    commits = [c["version"] for c in client.get(f"/gists/{gist_id}/commits").json()["data"]]
+    # Newest first: other=y, v=3, v=2, v=1, other=x (the repeated "2" made no
+    # commit). v=3 is listed once, at the newest commit that has it.
+    body = versions_of(client, gist_id, "v.json")
+    assert [v["version"] for v in body["data"]] == [commits[0], commits[2], commits[3]]
     assert body["pagination"] == {"cursor": None, "hasMore": False, "limit": 10, "count": 3}
+    assert "files" not in body["data"][0]
 
 
-def test_file_versions_paginates_with_cursor(client, github):
-    github.history = [("c", {"v": "3"}), ("b", {"v": "2"}), ("a", {"v": "1"})]
-    first = client.get("/gists/g1/file-versions/v", params={"limit": 2}).json()
-    assert [v["version"] for v in first["data"]] == ["c", "b"]
-    assert first["pagination"]["cursor"] == "b"
+def test_file_versions_paginate_with_cursor(client):
+    gist_id = create(client, filename="v", content="1")
+    patch(client, gist_id, "v", "2")
+    patch(client, gist_id, "v", "3")
+    commits = [c["version"] for c in client.get(f"/gists/{gist_id}/commits").json()["data"]]
 
-    second = client.get("/gists/g1/file-versions/v", params={"limit": 2, "cursor": "b"}).json()
-    assert [v["version"] for v in second["data"]] == ["a"]
+    first = versions_of(client, gist_id, "v", limit=2)
+    assert [v["version"] for v in first["data"]] == commits[:2]
+    assert first["pagination"]["cursor"] == commits[1]
+
+    second = versions_of(client, gist_id, "v", limit=2, cursor=commits[1])
+    assert [v["version"] for v in second["data"]] == commits[2:]
     assert second["pagination"]["hasMore"] is False
 
 
-def test_compare_against_null_version(client, github):
-    github.history = [("a", {"v": "1"})]
-    data = client.get("/gists/g1/file/v/compare/a/null").json()["data"]
+def test_compare(client):
+    gist_id = create(client, filename="v", content="1")
+    patch(client, gist_id, "v", "2")
+    new, old = [c["version"] for c in client.get(f"/gists/{gist_id}/commits").json()["data"]]
+
+    data = client.get(f"/gists/{gist_id}/file/v/compare/{new}/{old}").json()["data"]
+    assert data == {"contentA": "2", "contentB": "1"}
+    data = client.get(f"/gists/{gist_id}/file/v/compare/{old}/null").json()["data"]
     assert data == {"contentA": "1", "contentB": ""}
 
 

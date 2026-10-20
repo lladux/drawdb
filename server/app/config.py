@@ -1,7 +1,10 @@
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from dotenv import load_dotenv
+
+DEFAULT_DATABASE_PATH = str(Path(__file__).resolve().parent.parent / "data" / "drawdb.sqlite3")
 
 # Host and port for the MAIL_SERVICE values people commonly use. Any other
 # provider can be configured with MAIL_HOST and MAIL_PORT.
@@ -18,8 +21,9 @@ SMTP_SERVICES = {
 @dataclass(frozen=True)
 class Settings:
     dev: bool = False
-    github_token: str = ""
+    host: str = "127.0.0.1"
     port: int = 5000
+    database_path: str = DEFAULT_DATABASE_PATH
     allowed_origins: list[str] = field(default_factory=list)
     mail_host: str = ""
     mail_port: int = 465
@@ -36,8 +40,9 @@ def load_settings() -> Settings:
 
     return Settings(
         dev=os.getenv("NODE_ENV") == "dev",
-        github_token=os.getenv("GITHUB_TOKEN", ""),
+        host=os.getenv("HOST", "127.0.0.1"),
         port=int(os.getenv("PORT", "5000")),
+        database_path=os.getenv("DATABASE_PATH", DEFAULT_DATABASE_PATH),
         allowed_origins=[o.strip() for o in origins.split(",") if o.strip()],
         mail_host=os.getenv("MAIL_HOST", default_host),
         mail_port=int(os.getenv("MAIL_PORT", str(default_port))),
