@@ -5,6 +5,9 @@
 
 <h3 align="center">Free, simple, and intuitive database schema editor and SQL generator.</h3>
 
+> [!NOTE]
+> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm. Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
+
 <div align="center" style="margin-bottom:12px;">
     <a href="https://drawdb.app/" style="display: flex; align-items: center;">
         <img src="https://img.shields.io/badge/Start%20building-grey" alt="drawDB"/>
