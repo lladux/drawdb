@@ -55,7 +55,7 @@ Diagrams are saved to the backend through the editor's "cloud" extension hooks: 
 
 `src/pages/Hub.jsx` lists workspaces in a sidebar and the selected workspace's diagrams as cards (`components/Hub/`). `DiagramPreview` fits the existing `Thumbnail` SVG renderer to the card using preview data (tables, areas, notes) that `GET /workspaces/{id}/diagrams` trims from each diagram on the server.
 
-`src/api/workspaces.js` keeps unlock tokens in localStorage (`drawdb.workspaceTokens`) and `authHeaders()` sends all of them on every diagram/workspace request. In the editor, a 401 from loading a diagram makes `serverStorage.cloudLoad` redirect to `/?unlock=<workspace>&next=<path>`, and the hub returns there after the password is entered. A new diagram is saved into the workspace from `?workspace=` (set by the hub's "New diagram"), else the open diagram's workspace, else the last one selected in the hub.
+`src/api/auth.js` keeps unlock tokens in localStorage (`drawdb.workspaceTokens`) and `authHeaders()` sends all of them on every diagram/workspace request; `isAuthEnabled()` reads `GET /config` so the hub can hide password options when the server has them off. In the editor, a 401 from loading a diagram makes `serverStorage.cloudLoad` redirect to `/?unlock=<workspace>&next=<path>`, and the hub returns there after the password is entered. A new diagram is saved into the workspace from `?workspace=` (set by the hub's "New diagram"), else the open diagram's workspace, else the last one selected in the hub.
 
 `src/data/db.js` defines the Dexie (IndexedDB) database `drawDB`. It still holds `templates` (seeded from `src/templates/` via `data/seeds.js`) and any older local `diagrams`. A schema change requires bumping `db.version(...)` and adding an upgrade.
 
@@ -103,9 +103,10 @@ cd server && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.
 
 - `app/main.py` `create_app(settings)` is the app factory. Tests (`tests/conftest.py`) give each test its own temporary SQLite file.
 - `app/diagrams.py`: `/diagrams` CRUD. The full diagram JSON is stored in one column, with workspace, name, database, size and timestamps as columns for listing. Every operation checks access to the diagram's workspace through `WorkspaceStore.require_access`, which raises `WorkspaceLocked` (401) or `WorkspaceNotFound` (404).
-- `app/workspaces.py` and `app/auth.py`: workspaces with optional scrypt-hashed passwords, and HMAC tokens bound to the workspace's current password hash (read from the `X-Workspace-Tokens` header). The signing key is generated once and kept in the `meta` table.
+- `app/workspaces.py`: workspaces. It only asks an access policy from `app/auth.py` whether a request may open one.
+- `app/auth.py`: the optional password module: scrypt hashing, HMAC tokens bound to the workspace's current password hash (read from the `X-Workspace-Tokens` header), the `/unlock` route, and the `PasswordAuth`/`NoAuth` policies. `AUTH_ENABLED=false` picks `NoAuth` (all workspaces open, password changes rejected with 400, stored hashes kept). The signing key is generated once and kept in the `meta` table. `GET /config` tells the frontend whether auth is on.
 - `app/storage.py` migrates older databases with `PRAGMA user_version`. Bump `SCHEMA_VERSION` and add a step to `_migrate` when changing existing tables.
 - `app/gist_store.py`: a SQLite stand-in for the GitHub Gists API. Each change stores a full snapshot of the gist's files as a revision with a random 40-hex `version`, and an update that changes nothing creates no revision. `app/gists.py` serves it with GitHub-shaped JSON.
 - Routes and JSON shapes must stay compatible with `src/api/diagrams.js`, `src/api/gists.js` and `src/api/email.js`. `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
-- Env vars: `HOST` (default `127.0.0.1`), `PORT`, `DATABASE_PATH`, `CLIENT_URLS` (CORS allowlist; when unset, any localhost origin is allowed), `MAIL_*`, and `NODE_ENV=dev` for open CORS and reload.
+- Env vars: `HOST` (default `127.0.0.1`), `PORT`, `DATABASE_PATH`, `AUTH_ENABLED` (default `true`), `CLIENT_URLS` (CORS allowlist; when unset, any localhost origin is allowed), `MAIL_*`, and `NODE_ENV=dev` for open CORS and reload.
 - Routes that touch SQLite or SMTP are sync `def` on purpose, so FastAPI runs the blocking calls in a thread pool.

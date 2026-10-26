@@ -96,16 +96,17 @@ class DiagramStore:
 
     def save(self, diagram_id: str, payload: dict, tokens: list[str]) -> dict:
         """Create or replace a diagram. A new diagram goes to the payload's
-        `workspaceId` (or the default workspace); an existing one stays where
-        it is, use `move` to change that."""
+        `workspaceId`, or to the default workspace when that is missing or no
+        longer exists (the client may remember a deleted one); an existing
+        diagram stays where it is, use `update` to move it."""
         with self.db.connect() as conn:
             row = self._accessible_row(conn, diagram_id, tokens)
             if row is not None:
                 workspace_id, created_at = row["workspace_id"], row["created_at"]
             else:
-                workspace_id = payload.get("workspaceId") or self.workspaces.default_workspace_id(
-                    conn
-                )
+                workspace_id = payload.get("workspaceId")
+                if not workspace_id or not self.workspaces.exists(conn, workspace_id):
+                    workspace_id = self.workspaces.default_workspace_id(conn)
                 self.workspaces.require_access(conn, workspace_id, tokens)
                 created_at = now()
             return self._write(conn, diagram_id, workspace_id, payload, created_at)

@@ -1,6 +1,7 @@
 import axios from "axios";
 import { backendUrl as baseUrl } from "../config";
-import { authHeaders, getLastWorkspace, lockedWorkspaceId } from "./workspaces";
+import { authHeaders, lockedWorkspaceId } from "./auth";
+import { getLastWorkspace } from "./workspaces";
 
 export async function list() {
   const res = await axios.get(`${baseUrl}/diagrams`, {

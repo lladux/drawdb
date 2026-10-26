@@ -205,3 +205,29 @@ def test_tokens_survive_restart(settings):
         assert (
             client.get(f"/workspaces/{secret_id}/diagrams", headers=auth(token)).status_code == 200
         )
+
+
+def test_new_diagram_in_deleted_workspace_goes_to_default(client):
+    work_id, _ = create_workspace(client)
+    client.delete(f"/workspaces/{work_id}")
+
+    res = client.put("/diagrams/d1", json={**DIAGRAM, "workspaceId": work_id})
+    assert res.status_code == 200
+    assert res.json()["data"]["workspaceId"] == default_workspace(client)["id"]
+
+
+def test_blank_workspace_names_are_rejected(client):
+    assert client.post("/workspaces", json={"name": "   "}).status_code == 422
+    work_id, _ = create_workspace(client)
+    assert client.patch(f"/workspaces/{work_id}", json={"name": " "}).status_code == 422
+
+
+def test_workspace_names_are_trimmed(client):
+    work_id, _ = create_workspace(client, name="  Work  ")
+    client.patch(f"/workspaces/{work_id}", json={"name": " Renamed "})
+    names = [w["name"] for w in client.get("/workspaces").json()["data"]]
+    assert "Renamed" in names
+
+
+def test_config_reports_auth(client):
+    assert client.get("/config").json()["data"] == {"auth": True}

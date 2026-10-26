@@ -31,6 +31,8 @@ Every diagram belongs to a workspace. On first start the server creates a `Perso
 
 A workspace can have a password (hashed with scrypt). `POST /workspaces/{id}/unlock` checks it and returns a token signed with a key stored in the database. Clients send their tokens in the `X-Workspace-Tokens` header (comma-separated, one per unlocked workspace), and requests for a locked workspace's diagrams get `401` with `{"workspaceId": ...}`. Tokens last 30 days, and changing or removing a password invalidates the old ones. A forgotten password can't be recovered.
 
+Passwords are optional and live in one module, `app/auth.py`. To run without them, set `AUTH_ENABLED=false`: every workspace is then open, setting or removing a password returns `400`, and `/unlock` doesn't exist. Passwords already stored are kept (the server logs a warning on startup), so setting `AUTH_ENABLED=true` again locks those workspaces again. `GET /config` reports `{"auth": true|false}`, and the hub uses it to hide the password options.
+
 Workspaces without a password, workspace names, and shared diagrams (`/gists`, which work by unguessable link) are open to anyone who can reach the server. It listens on `127.0.0.1` by default; only set `HOST=0.0.0.0` on a network you trust, and put it behind HTTPS if it leaves your machine, since passwords and tokens travel in plain text otherwise.
 
 ## API
@@ -40,13 +42,14 @@ Workspaces without a password, workspace names, and shared diagrams (`/gists`, w
 | `GET /diagrams`                               | Diagrams in every workspace you can open (summaries, newest first)                      |
 | `GET /diagrams/{id}`                          | Full diagram                                                                            |
 | `PUT /diagrams/{id}`                          | Create or replace a diagram; a new one goes to `workspaceId` (or the default workspace) |
+| `GET /config`                                 | Features the server has on (`auth`)                                                     |
 | `PATCH /diagrams/{id}`                        | Rename (`name`) or move (`workspaceId`) a diagram                                       |
 | `DELETE /diagrams/{id}`                       | Delete a diagram                                                                        |
 | `GET /workspaces`                             | Workspaces, with `protected` and `unlocked` flags                                       |
 | `POST /workspaces`                            | Create a workspace (`name`, optional `password`); returns a token if protected          |
 | `PATCH /workspaces/{id}`                      | Rename or change the password (`""` removes it)                                         |
 | `DELETE /workspaces/{id}`                     | Delete a workspace and its diagrams                                                     |
-| `POST /workspaces/{id}/unlock`                | Check the password and get a token                                                      |
+| `POST /workspaces/{id}/unlock`                | Check the password and get a token (only with `AUTH_ENABLED`)                           |
 | `GET /workspaces/{id}/diagrams`               | The workspace's diagrams, with preview data for thumbnails                              |
 | `POST /gists`                                 | Create a gist with one file                                                             |
 | `GET /gists/{id}`                             | Gist with the latest files                                                              |

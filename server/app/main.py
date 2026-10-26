@@ -1,20 +1,33 @@
+import logging
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, PlainTextResponse
 
-from . import diagrams, email_route, gists, workspaces
-from .auth import TokenSigner
+from . import auth, diagrams, email_route, gists, workspaces
 from .config import Settings, load_settings
 from .gist_store import GistNotFound, GistStore
 from .storage import Database
 
 LOCAL_ORIGINS = r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?"
 
+# Uvicorn's logger, so warnings show up formatted like the rest of the log.
+logger = logging.getLogger("uvicorn.error")
+
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or load_settings()
     db = Database(settings.database_path)
-    workspace_store = workspaces.WorkspaceStore(db, TokenSigner(db.secret()))
+    access = (
+        auth.PasswordAuth(auth.TokenSigner(db.secret())) if settings.auth_enabled else auth.NoAuth()
+    )
+    workspace_store = workspaces.WorkspaceStore(db, access)
+    if not settings.auth_enabled and workspace_store.protected_count():
+        logger.warning(
+            "AUTH_ENABLED is off: %d password-protected workspace(s) are open to anyone"
+            " who can reach the server.",
+            workspace_store.protected_count(),
+        )
 
     app = FastAPI(title="drawDB server")
     app.state.settings = settings
@@ -54,6 +67,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             },
         )
 
+    @app.exception_handler(auth.PasswordsDisabled)
+    async def passwords_disabled(request: Request, exc: auth.PasswordsDisabled):
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "message": "Workspace passwords are disabled"},
+        )
+
     @app.get("/", response_class=PlainTextResponse)
     async def root():
         return "Hello"
@@ -62,5 +82,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(email_route.router)
     app.include_router(gists.router)
     app.include_router(workspaces.router)
+    if settings.auth_enabled:
+        app.include_router(auth.router)
+
+    # Lets the frontend hide features the server has turned off.
+    @app.get("/config")
+    def config():
+        return {"success": True, "data": {"auth": settings.auth_enabled}}
 
     return app

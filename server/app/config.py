@@ -25,6 +25,7 @@ class Settings:
     port: int = 5000
     database_path: str = DEFAULT_DATABASE_PATH
     allowed_origins: list[str] = field(default_factory=list)
+    auth_enabled: bool = True
     mail_host: str = ""
     mail_port: int = 465
     mail_username: str = ""
@@ -44,6 +45,8 @@ def load_settings() -> Settings:
         port=int(os.getenv("PORT", "5000")),
         database_path=os.getenv("DATABASE_PATH", DEFAULT_DATABASE_PATH),
         allowed_origins=[o.strip() for o in origins.split(",") if o.strip()],
+        auth_enabled=os.getenv("AUTH_ENABLED", "true").strip().lower()
+        not in ("0", "false", "no", "off"),
         mail_host=os.getenv("MAIL_HOST", default_host),
         mail_port=int(os.getenv("MAIL_PORT", str(default_port))),
         mail_username=os.getenv("MAIL_USERNAME", ""),

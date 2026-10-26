@@ -8,10 +8,12 @@ const REMOVE = "remove";
 
 // Creates a workspace (no `workspace` prop) or edits one. Calls onSubmit with
 // { name, password }, where password is undefined to keep the current one and
-// "" to remove it.
+// "" to remove it. Without `allowPasswords` (the server has them off) the
+// password options are hidden and password is always undefined.
 export default function WorkspaceModal({
   visible,
   workspace,
+  allowPasswords = true,
   onSubmit,
   onCancel,
 }) {
@@ -33,11 +35,9 @@ export default function WorkspaceModal({
     setConfirm("");
   }, [visible, workspace]);
 
-  const settingPassword = editing
-    ? workspace.protected
-      ? passwordMode === CHANGE
-      : protect
-    : protect;
+  const settingPassword =
+    allowPasswords &&
+    (editing && workspace.protected ? passwordMode === CHANGE : protect);
   const mismatch = settingPassword && confirm !== "" && password !== confirm;
   const valid =
     name.trim() !== "" &&
@@ -47,7 +47,12 @@ export default function WorkspaceModal({
     if (!valid) return;
     let nextPassword;
     if (settingPassword) nextPassword = password;
-    else if (editing && workspace.protected && passwordMode === REMOVE)
+    else if (
+      allowPasswords &&
+      editing &&
+      workspace.protected &&
+      passwordMode === REMOVE
+    )
       nextPassword = "";
     setBusy(true);
     try {
@@ -80,7 +85,7 @@ export default function WorkspaceModal({
           />
         </label>
 
-        {editing && workspace.protected ? (
+        {!allowPasswords ? null : editing && workspace.protected ? (
           <RadioGroup
             direction="vertical"
             value={passwordMode}

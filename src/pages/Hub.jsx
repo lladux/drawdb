@@ -11,6 +11,7 @@ import {
 } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
 import { useSettings, useThemedPage } from "../hooks";
+import * as authApi from "../api/auth";
 import * as workspacesApi from "../api/workspaces";
 import * as diagramsApi from "../api/diagrams";
 import { backendUrl } from "../config";
@@ -40,6 +41,7 @@ export default function Hub() {
   const [workspaceModal, setWorkspaceModal] = useState(null);
   const [renaming, setRenaming] = useState(null);
   const [newName, setNewName] = useState("");
+  const [authEnabled, setAuthEnabled] = useState(true);
 
   const selected = workspaces?.find((w) => w.id === selectedId) ?? null;
 
@@ -69,9 +71,9 @@ export default function Hub() {
     try {
       setDiagrams(await workspacesApi.listDiagrams(selected.id));
     } catch (e) {
-      if (workspacesApi.lockedWorkspaceId(e)) {
+      if (authApi.lockedWorkspaceId(e)) {
         // The saved token expired or the password changed.
-        workspacesApi.lock(selected.id);
+        authApi.lock(selected.id);
         loadWorkspaces();
       } else {
         setError(e);
@@ -83,6 +85,24 @@ export default function Hub() {
     document.title = `${t("hub_title")} | drawDB`;
     loadWorkspaces();
   }, [loadWorkspaces, t]);
+
+  useEffect(() => {
+    authApi
+      .isAuthEnabled()
+      .then(setAuthEnabled)
+      .catch(() => {});
+  }, []);
+
+  // Back from the editor to unlock a workspace that is already open (unlocked
+  // in another tab, or passwords were turned off): go straight back.
+  useEffect(() => {
+    const unlockId = searchParams.get("unlock");
+    const next = safeNext(searchParams.get("next"));
+    if (!unlockId || !next) return;
+    if (workspaces?.some((w) => w.id === unlockId && w.unlocked)) {
+      navigate(next, { replace: true });
+    }
+  }, [workspaces, searchParams, navigate]);
 
   useEffect(() => {
     setDiagrams(null);
@@ -103,7 +123,7 @@ export default function Hub() {
   }, [diagrams, query]);
 
   const unlock = async (password) => {
-    const ok = await workspacesApi.unlock(selected.id, password);
+    const ok = await authApi.unlock(selected.id, password);
     if (!ok) return false;
     const next = safeNext(searchParams.get("next"));
     if (next && searchParams.get("unlock") === selected.id) {
@@ -214,7 +234,7 @@ export default function Hub() {
       {selected.protected && selected.unlocked && (
         <Dropdown.Item
           onClick={() => {
-            workspacesApi.lock(selected.id);
+            authApi.lock(selected.id);
             loadWorkspaces();
           }}
         >
@@ -429,6 +449,7 @@ export default function Hub() {
       <WorkspaceModal
         visible={workspaceModal !== null}
         workspace={workspaceModal?.workspace}
+        allowPasswords={authEnabled}
         onSubmit={submitWorkspace}
         onCancel={() => setWorkspaceModal(null)}
       />

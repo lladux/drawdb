@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Input } from "@douyinfe/semi-ui";
+import { Button, Input, Toast } from "@douyinfe/semi-ui";
 import { useTranslation } from "react-i18next";
 
 export default function UnlockPanel({ workspace, onUnlock }) {
@@ -12,10 +12,15 @@ export default function UnlockPanel({ workspace, onUnlock }) {
     e.preventDefault();
     if (!password) return;
     setBusy(true);
-    const ok = await onUnlock(password).finally(() => setBusy(false));
-    if (!ok) {
-      setWrong(true);
-      setPassword("");
+    try {
+      if (!(await onUnlock(password))) {
+        setWrong(true);
+        setPassword("");
+      }
+    } catch {
+      Toast.error(t("oops_smth_went_wrong"));
+    } finally {
+      setBusy(false);
     }
   };
 

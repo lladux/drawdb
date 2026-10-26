@@ -1,11 +1,11 @@
 import json
 import secrets
+from typing import Annotated
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, StringConstraints
 
-from .auth import TokenSigner, hash_password, request_tokens, verify_password
+from .auth import AccessPolicy, PasswordsDisabled, WrongPassword, request_tokens
 from .storage import Database, now
 
 router = APIRouter(prefix="/workspaces")
@@ -57,9 +57,9 @@ def preview_of(data: dict) -> dict:
 
 
 class WorkspaceStore:
-    def __init__(self, db: Database, signer: TokenSigner):
+    def __init__(self, db: Database, auth: AccessPolicy):
         self.db = db
-        self.signer = signer
+        self.auth = auth
         with db.connect() as conn:
             default_id = self.default_workspace_id(conn)
             conn.execute(
@@ -75,8 +75,14 @@ class WorkspaceStore:
             return row["id"]
         return self._insert(conn, DEFAULT_WORKSPACE_NAME, None)
 
-    @staticmethod
-    def _insert(conn, name: str, password: str | None) -> str:
+    def protected_count(self) -> int:
+        """Workspaces that have a password, whether or not auth is enabled."""
+        with self.db.connect() as conn:
+            return conn.execute(
+                "SELECT COUNT(*) FROM workspaces WHERE password_hash IS NOT NULL"
+            ).fetchone()[0]
+
+    def _insert(self, conn, name: str, password: str | None) -> str:
         workspace_id = secrets.token_hex(16)
         timestamp = now()
         conn.execute(
@@ -85,12 +91,18 @@ class WorkspaceStore:
             (
                 workspace_id,
                 name,
-                hash_password(password) if password else None,
+                self.auth.hash(password) if password else None,
                 timestamp,
                 timestamp,
             ),
         )
         return workspace_id
+
+    def exists(self, conn, workspace_id: str) -> bool:
+        return (
+            conn.execute("SELECT 1 FROM workspaces WHERE id = ?", (workspace_id,)).fetchone()
+            is not None
+        )
 
     def row(self, conn, workspace_id: str):
         row = conn.execute("SELECT * FROM workspaces WHERE id = ?", (workspace_id,)).fetchone()
@@ -99,9 +111,7 @@ class WorkspaceStore:
         return row
 
     def can_access(self, row, tokens: list[str]) -> bool:
-        if row["password_hash"] is None:
-            return True
-        return any(self.signer.is_valid(t, row["id"], row["password_hash"]) for t in tokens)
+        return self.auth.can_access(row["id"], row["password_hash"], tokens)
 
     def require_access(self, conn, workspace_id: str, tokens: list[str]):
         row = self.row(conn, workspace_id)
@@ -121,7 +131,7 @@ class WorkspaceStore:
         return {
             "id": row["id"],
             "name": row["name"],
-            "protected": row["password_hash"] is not None,
+            "protected": self.auth.is_protected(row["password_hash"]),
             "unlocked": unlocked,
             # Only reveal what a locked workspace holds once it is unlocked.
             "diagramCount": count if unlocked else None,
@@ -138,7 +148,7 @@ class WorkspaceStore:
         with self.db.connect() as conn:
             workspace_id = self._insert(conn, name, password)
             row = self.row(conn, workspace_id)
-            token = self.signer.issue(workspace_id, row["password_hash"]) if password else None
+            token = self.auth.issue(workspace_id, row["password_hash"]) if password else None
             return self._json(conn, row, [token] if token else []), token
 
     def update(
@@ -147,17 +157,19 @@ class WorkspaceStore:
         """Rename and/or change the password. An empty password removes it.
         Returns a fresh token when a new password is set, since it invalidates
         the old ones."""
+        if password is not None and not self.auth.enabled:
+            raise PasswordsDisabled()
         with self.db.connect() as conn:
             row = self.require_access(conn, workspace_id, tokens)
             password_hash = row["password_hash"]
             if password is not None:
-                password_hash = hash_password(password) if password else None
+                password_hash = self.auth.hash(password) if password else None
             conn.execute(
                 "UPDATE workspaces SET name = ?, password_hash = ?, updated_at = ? WHERE id = ?",
                 (name if name is not None else row["name"], password_hash, now(), workspace_id),
             )
             row = self.row(conn, workspace_id)
-            token = self.signer.issue(workspace_id, password_hash) if password else None
+            token = self.auth.issue(workspace_id, password_hash) if password else None
             return self._json(conn, row, [*tokens, token] if token else tokens), token
 
     def delete(self, workspace_id: str, tokens: list[str]) -> None:
@@ -166,13 +178,15 @@ class WorkspaceStore:
             conn.execute("DELETE FROM workspaces WHERE id = ?", (workspace_id,))
 
     def unlock(self, workspace_id: str, password: str) -> str | None:
+        """A token for the workspace, or None if it has no password. Raises
+        WrongPassword."""
         with self.db.connect() as conn:
             row = self.row(conn, workspace_id)
         if row["password_hash"] is None:
             return None
-        if not verify_password(password, row["password_hash"]):
-            raise WorkspaceLocked(workspace_id)
-        return self.signer.issue(workspace_id, row["password_hash"])
+        if not self.auth.check_password(password, row["password_hash"]):
+            raise WrongPassword()
+        return self.auth.issue(workspace_id, row["password_hash"])
 
     def diagrams(self, workspace_id: str, tokens: list[str]) -> list[dict]:
         with self.db.connect() as conn:
@@ -196,19 +210,22 @@ class WorkspaceStore:
         ]
 
 
+# Surrounding whitespace is dropped before the length check, so a name made
+# only of spaces is rejected.
+WorkspaceName = Annotated[
+    str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)
+]
+
+
 class CreateWorkspaceBody(BaseModel):
-    name: str = Field(min_length=1, max_length=100)
+    name: WorkspaceName
     password: str | None = None
 
 
 class UpdateWorkspaceBody(BaseModel):
-    name: str | None = Field(default=None, min_length=1, max_length=100)
+    name: WorkspaceName | None = None
     # Omit to keep the password, "" to remove it.
     password: str | None = None
-
-
-class UnlockBody(BaseModel):
-    password: str
 
 
 def store(request: Request) -> WorkspaceStore:
@@ -222,7 +239,7 @@ def list_workspaces(request: Request):
 
 @router.post("")
 def create_workspace(request: Request, body: CreateWorkspaceBody):
-    workspace, token = store(request).create(body.name.strip(), body.password or None)
+    workspace, token = store(request).create(body.name, body.password or None)
     return {"success": True, "data": workspace, "token": token}
 
 
@@ -231,7 +248,7 @@ def update_workspace(request: Request, workspace_id: str, body: UpdateWorkspaceB
     workspace, token = store(request).update(
         workspace_id,
         request_tokens(request),
-        body.name.strip() if body.name is not None else None,
+        body.name,
         body.password,
     )
     return {"success": True, "data": workspace, "token": token}
@@ -241,17 +258,6 @@ def update_workspace(request: Request, workspace_id: str, body: UpdateWorkspaceB
 def delete_workspace(request: Request, workspace_id: str):
     store(request).delete(workspace_id, request_tokens(request))
     return {"success": True, "message": "Workspace deleted"}
-
-
-@router.post("/{workspace_id}/unlock")
-def unlock_workspace(request: Request, workspace_id: str, body: UnlockBody):
-    try:
-        token = store(request).unlock(workspace_id, body.password)
-    except WorkspaceLocked:
-        return JSONResponse(
-            status_code=401, content={"success": False, "message": "Wrong password"}
-        )
-    return {"success": True, "token": token}
 
 
 @router.get("/{workspace_id}/diagrams")
