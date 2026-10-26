@@ -135,6 +135,7 @@ const zh = {
     on_update: "更新时",
     on_delete: "删除时",
     swap: "交换",
+    reset_route: "重置连线路径",
     one_to_one: "一对一",
     one_to_many: "一对多",
     many_to_one: "多对一",

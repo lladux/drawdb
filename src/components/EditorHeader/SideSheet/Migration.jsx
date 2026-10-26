@@ -51,6 +51,7 @@ export default function Migration({
         "y",
         "width",
         "height",
+        "waypoints",
         "locked",
         "color",
         "title",

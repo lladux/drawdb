@@ -7,11 +7,7 @@ import {
   Collapse,
   Card,
 } from "@douyinfe/semi-ui";
-import {
-  IconClose,
-  IconDeleteStroked,
-  IconPlus,
-} from "@douyinfe/semi-icons";
+import { IconClose, IconDeleteStroked, IconPlus } from "@douyinfe/semi-icons";
 import {
   Cardinality,
   Constraint,
@@ -147,9 +143,7 @@ export default function RelationshipInfo({ data }) {
 
   const removePair = (index) => {
     if (pairs.length <= 1) return;
-    const newPairs = pairs
-      .filter((_, i) => i !== index)
-      .map((p) => ({ ...p }));
+    const newPairs = pairs.filter((_, i) => i !== index).map((p) => ({ ...p }));
     commitPairs(newPairs, "[remove field]");
   };
 
@@ -168,6 +162,10 @@ export default function RelationshipInfo({ data }) {
       fields: swappedPairs,
       startFieldId: swappedPairs[0].startFieldId,
       endFieldId: swappedPairs[0].endFieldId,
+      // The same route walked from the other end.
+      ...(Array.isArray(data.waypoints) && {
+        waypoints: [...data.waypoints].reverse(),
+      }),
     };
     setUndoStack((prev) => [
       ...prev,
@@ -182,6 +180,7 @@ export default function RelationshipInfo({ data }) {
           fields: pairs.map((p) => ({ ...p })),
           startFieldId: data.startFieldId,
           endFieldId: data.endFieldId,
+          ...(Array.isArray(data.waypoints) && { waypoints: data.waypoints }),
         },
         redo,
         message: t("edit_relationship", {
@@ -192,6 +191,26 @@ export default function RelationshipInfo({ data }) {
     ]);
     setRedoStack([]);
     updateRelationship(data.id, redo);
+  };
+
+  const resetRoute = () => {
+    if (layout.readOnly || !Array.isArray(data.waypoints)) return;
+    setUndoStack((prev) => [
+      ...prev,
+      {
+        action: Action.EDIT,
+        element: ObjectType.RELATIONSHIP,
+        rid: data.id,
+        undo: { waypoints: data.waypoints },
+        redo: { waypoints: undefined },
+        message: t("edit_relationship", {
+          refName: data.name,
+          extra: "[reset route]",
+        }),
+      },
+    ]);
+    setRedoStack([]);
+    updateRelationship(data.id, { waypoints: undefined });
   };
 
   const changeCardinality = (value) => {
@@ -300,7 +319,9 @@ export default function RelationshipInfo({ data }) {
           <Input
             value={data.manyLabel}
             placeholder={t("label")}
-            onChange={(value) => updateRelationship(data.id, { manyLabel: value })}
+            onChange={(value) =>
+              updateRelationship(data.id, { manyLabel: value })
+            }
             onFocus={(e) => setEditField({ manyLabel: e.target.value })}
             readonly={layout.readOnly}
             onBlur={(e) => {
@@ -427,6 +448,14 @@ export default function RelationshipInfo({ data }) {
           onColorPick={(color) => handleColorPick(color)}
         />
         <div className="flex gap-1">
+          <Button
+            icon={<i className="bi bi-bezier2" />}
+            type="tertiary"
+            onClick={resetRoute}
+            disabled={layout.readOnly || !Array.isArray(data.waypoints)}
+            title={t("reset_route")}
+            aria-label={t("reset_route")}
+          />
           <Button
             icon={<i className="bi bi-arrow-left-right" />}
             type="tertiary"

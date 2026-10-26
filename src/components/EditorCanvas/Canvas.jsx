@@ -16,6 +16,8 @@ import View from "./View";
 import Area from "./Area";
 import Relationship from "./Relationship";
 import Note from "./Note";
+import RouteHandles from "./RouteHandles";
+import useRelationshipRoutes from "./useRelationshipRoutes";
 import {
   useCanvas,
   useSettings,
@@ -43,6 +45,12 @@ import {
   resolveViewColumns,
 } from "../../utils/views";
 import { getRectFromEndpoints, isInsideRect } from "../../utils/rect";
+import {
+  dragSegment,
+  paramsToWaypoints,
+  removeEmptySegments,
+  routeParams,
+} from "../../utils/orthogonalRouting";
 import { State, noteWidth } from "../../data/constants";
 import { nanoid } from "nanoid";
 
@@ -51,6 +59,26 @@ const notDragging = {
   type: ObjectType.NONE,
   grabOffset: { x: 0, y: 0 },
 };
+
+// How close (in screen pixels) a dragged line segment must get to another
+// segment of the same line to snap in line with it.
+const segmentSnapDistance = 8;
+// Pointer travel (in screen pixels) before a press on a segment handle
+// counts as a drag.
+const segmentDragThreshold = 3;
+
+function snapToNearest(value, candidates, maxDistance) {
+  let best = value;
+  let bestDistance = maxDistance;
+  for (const candidate of candidates) {
+    const distance = Math.abs(candidate - value);
+    if (distance < bestDistance) {
+      best = candidate;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
 
 export default function Canvas() {
   const { t } = useTranslation();
@@ -62,8 +90,14 @@ export default function Canvas() {
     pointer,
   } = canvasContextValue;
 
-  const { tables, updateTable, relationships, addRelationship, database } =
-    useDiagram();
+  const {
+    tables,
+    updateTable,
+    relationships,
+    addRelationship,
+    updateRelationship,
+    database,
+  } = useDiagram();
   const { setSaveState } = useSaveState();
   const { areas, updateArea } = useAreas();
   const { views, updateView } = useViews();
@@ -151,6 +185,151 @@ export default function Canvas() {
     () => new Map(tables.map((table) => [table.id, table])),
     [tables],
   );
+
+  const routes = useRelationshipRoutes(
+    tables,
+    relationships,
+    views,
+    settings.showComments,
+  );
+  // The relationship line segment being dragged: { id, index, points,
+  // initialWaypoints, origin, moved, waypoints }. `points` is the route when
+  // the drag started and `waypoints` the latest result. A ref, so pointer
+  // events always see the latest values without waiting for a render.
+  const routeDragRef = useRef(null);
+  // Manual routes carried along while both of their tables are dragged:
+  // relationship id -> waypoints when the drag started.
+  const carriedRoutesRef = useRef(new Map());
+
+  const selectRelationship = useCallback(
+    (id) => {
+      setBulkSelectedElements([]);
+      setSelectedElement((prev) => ({
+        ...prev,
+        element: ObjectType.RELATIONSHIP,
+        id,
+        open: false,
+      }));
+    },
+    [setBulkSelectedElements, setSelectedElement],
+  );
+
+  const startSegmentDrag = useCallback(
+    (id, index, points, e) => {
+      if (layout.readOnly) return;
+      const relationship = relationships.find((r) => r.id === id);
+      // Keep receiving the drag's events even outside the canvas, so letting
+      // go anywhere ends it.
+      canvasRef.current?.setPointerCapture?.(e.pointerId);
+      routeDragRef.current = {
+        id,
+        index,
+        points,
+        initialWaypoints: relationship?.waypoints,
+        origin: { x: e.clientX, y: e.clientY },
+        moved: false,
+        waypoints: relationship?.waypoints,
+      };
+    },
+    [layout.readOnly, relationships],
+  );
+
+  const moveSegment = (e) => {
+    const drag = routeDragRef.current;
+    if (!drag.moved) {
+      // A click on a handle shouldn't turn an automatic route into a manual
+      // one; wait for a real drag.
+      const distance = Math.hypot(
+        e.clientX - drag.origin.x,
+        e.clientY - drag.origin.y,
+      );
+      if (distance < segmentDragThreshold) return;
+      drag.moved = true;
+    }
+
+    const { id, index, points } = drag;
+    const a = points[index];
+    const b = points[index + 1];
+    const vertical = Math.abs(a.x - b.x) < 0.5;
+    let { x, y } = coordinatesAfterSnappingToGrid(pointer.spaces.diagram);
+    // Snap in line with the line's other parallel segments, so dragging a
+    // segment next to its neighbour removes the bend between them.
+    const others = points.slice(0, -1).flatMap((p, i) => {
+      if (i === index) return [];
+      const q = points[i + 1];
+      const otherVertical = Math.abs(p.x - q.x) < 0.5;
+      if (otherVertical !== vertical) return [];
+      return [vertical ? p.x : p.y];
+    });
+    const snapDistance = segmentSnapDistance / transform.zoom;
+    if (vertical) x = snapToNearest(x, others, snapDistance);
+    else y = snapToNearest(y, others, snapDistance);
+
+    drag.waypoints = paramsToWaypoints(
+      dragSegment(points, index, { x, y }),
+      points[0].y,
+      points[points.length - 1].y,
+    );
+    updateRelationship(id, { waypoints: drag.waypoints });
+  };
+
+  const finishSegmentDrag = () => {
+    const { id, points, initialWaypoints, moved, waypoints } =
+      routeDragRef.current;
+    routeDragRef.current = null;
+    const relationship = relationships.find((r) => r.id === id);
+    if (!relationship || !moved || !Array.isArray(waypoints)) return;
+
+    const startY = points[0].y;
+    const endY = points[points.length - 1].y;
+    const cleaned = paramsToWaypoints(
+      removeEmptySegments(routeParams(waypoints), startY, endY),
+      startY,
+      endY,
+    );
+    if (JSON.stringify(cleaned) === JSON.stringify(initialWaypoints)) {
+      updateRelationship(id, { waypoints: initialWaypoints });
+      return;
+    }
+    updateRelationship(id, { waypoints: cleaned });
+    setUndoStack((prev) => [
+      ...prev,
+      {
+        action: Action.EDIT,
+        element: ObjectType.RELATIONSHIP,
+        rid: id,
+        undo: { waypoints: initialWaypoints },
+        redo: { waypoints: cleaned },
+        message: t("edit_relationship", {
+          refName: relationship.name,
+          extra: "[route]",
+        }),
+      },
+    ]);
+    setRedoStack([]);
+  };
+
+  // Moves the manual routes whose two tables are both being dragged by the
+  // drag's total offset, as draw.io does, so they don't get left behind.
+  const carryRoutes = (movedTableIds, offsetX, offsetY) => {
+    const carried = carriedRoutesRef.current;
+    for (const r of relationships) {
+      if (
+        !movedTableIds.has(r.startTableId) ||
+        !movedTableIds.has(r.endTableId)
+      )
+        continue;
+      if (!carried.has(r.id)) {
+        if (!Array.isArray(r.waypoints)) continue;
+        carried.set(r.id, r.waypoints);
+      }
+      updateRelationship(r.id, {
+        waypoints: carried
+          .get(r.id)
+          .map((p) => ({ x: p.x + offsetX, y: p.y + offsetY })),
+      });
+    }
+  };
 
   const selectedTableIds = useMemo(() => {
     const ids = new Set(
@@ -382,6 +561,13 @@ export default function Canvas() {
 
     if (layout.readOnly) return;
 
+    if (routeDragRef.current) {
+      // The button was released somewhere we didn't hear about.
+      if (e.buttons === 0) finishSegmentDrag();
+      else moveSegment(e);
+      return;
+    }
+
     if (linking) {
       setLinkingLine({
         ...linkingLine,
@@ -398,7 +584,7 @@ export default function Canvas() {
           y: pointer.spaces.diagram.y - dragging.grabOffset.y,
         });
 
-      const { currentCoords } = bulkSelectedElements.find((el) =>
+      const { currentCoords, initialCoords } = bulkSelectedElements.find((el) =>
         isSameElement(el, dragging),
       );
 
@@ -430,6 +616,15 @@ export default function Canvas() {
       });
 
       setBulkSelectedElements(newBulkSelectedElements);
+      carryRoutes(
+        new Set(
+          bulkSelectedElements
+            .filter((el) => el.type === ObjectType.TABLE)
+            .map((el) => el.id),
+        ),
+        mainElementFinalX - initialCoords.x,
+        mainElementFinalY - initialCoords.y,
+      );
       return;
     }
 
@@ -515,6 +710,20 @@ export default function Canvas() {
     const isMouseMiddleButton = e.button === 1;
     const isMouseRightButton = e.button === 2;
 
+    if (
+      isMouseLeftButton &&
+      elementPointerDown === null &&
+      selectedElement.element === ObjectType.RELATIONSHIP &&
+      !selectedElement.open
+    ) {
+      // Clicking empty canvas deselects a line and hides its handles.
+      setSelectedElement((prev) => ({
+        ...prev,
+        element: ObjectType.NONE,
+        id: -1,
+      }));
+    }
+
     if (isMouseLeftButton) {
       setBulkSelectRect({
         x1: pointer.spaces.diagram.x,
@@ -578,19 +787,45 @@ export default function Canvas() {
 
     if (!e.isPrimary) return;
 
+    if (routeDragRef.current) {
+      finishSegmentDrag();
+      return;
+    }
+
     if (didDrag()) {
+      const main = bulkSelectedElements.find((el) =>
+        isSameElement(el, dragging),
+      );
+      const offsetX = main.currentCoords.x - main.initialCoords.x;
+      const offsetY = main.currentCoords.y - main.initialCoords.y;
+      const carriedRoutes = [...carriedRoutesRef.current].map(
+        ([id, waypoints]) => ({
+          id,
+          type: ObjectType.RELATIONSHIP,
+          undo: { waypoints },
+          redo: {
+            waypoints: waypoints.map((p) => ({
+              x: p.x + offsetX,
+              y: p.y + offsetY,
+            })),
+          },
+        }),
+      );
       setUndoStack((prev) => [
         ...prev,
         {
           action: Action.MOVE,
           bulk: true,
           message: t("bulk_update"),
-          elements: bulkSelectedElements.map((el) => ({
-            id: el.id,
-            type: el.type,
-            undo: el.initialCoords,
-            redo: el.currentCoords,
-          })),
+          elements: [
+            ...bulkSelectedElements.map((el) => ({
+              id: el.id,
+              type: el.type,
+              undo: el.initialCoords,
+              redo: el.currentCoords,
+            })),
+            ...carriedRoutes,
+          ],
         },
       ]);
       setRedoStack([]);
@@ -614,6 +849,7 @@ export default function Canvas() {
       }
     }
     setDragging(notDragging);
+    carriedRoutesRef.current = new Map();
 
     if (panning.isPanning && didPan()) {
       setSaveState(State.SAVING);
@@ -848,6 +1084,12 @@ export default function Canvas() {
               startTable={tablesById.get(e.startTableId)}
               endTable={tablesById.get(e.endTableId)}
               relationships={relationships}
+              route={routes.get(e.id)}
+              selected={
+                selectedElement.element === ObjectType.RELATIONSHIP &&
+                selectedElement.id === e.id
+              }
+              onSelect={selectRelationship}
             />
           ))}
           {tables.map((table) => (
@@ -886,6 +1128,16 @@ export default function Canvas() {
               onPointerDown={handleElementPointerDown}
             />
           ))}
+          {selectedElement.element === ObjectType.RELATIONSHIP &&
+            !layout.readOnly &&
+            routes.has(selectedElement.id) && (
+              <RouteHandles
+                id={selectedElement.id}
+                points={routes.get(selectedElement.id).points}
+                zoom={transform.zoom}
+                onSegmentPointerDown={startSegmentDrag}
+              />
+            )}
           {bulkSelectRect.show && (
             <rect
               {...getRectFromEndpoints(bulkSelectRect)}

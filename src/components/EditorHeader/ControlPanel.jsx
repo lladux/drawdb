@@ -218,6 +218,8 @@ export default function ControlPanel({
           updateNote(element.id, element.undo);
         } else if (element.type === ObjectType.VIEW) {
           updateView(element.id, element.undo);
+        } else if (element.type === ObjectType.RELATIONSHIP) {
+          updateRelationship(element.id, element.undo);
         }
       }
       setRedoStack((prev) => [...prev, a]);
@@ -436,6 +438,8 @@ export default function ControlPanel({
           updateNote(element.id, element.redo);
         } else if (element.type === ObjectType.VIEW) {
           updateView(element.id, element.redo);
+        } else if (element.type === ObjectType.RELATIONSHIP) {
+          updateRelationship(element.id, element.redo);
         }
       }
       setUndoStack((prev) => [...prev, a]);
@@ -772,8 +776,24 @@ export default function ControlPanel({
 
     if (elements.length === 0) return;
 
+    // Hand-drawn routes were made for the old positions; go back to
+    // automatic ones.
+    for (const r of relationships) {
+      if (!Array.isArray(r.waypoints)) continue;
+      elements.push({
+        id: r.id,
+        type: ObjectType.RELATIONSHIP,
+        undo: { waypoints: r.waypoints },
+        redo: { waypoints: undefined },
+      });
+    }
+
     for (const element of elements) {
-      updateTable(element.id, element.redo);
+      if (element.type === ObjectType.RELATIONSHIP) {
+        updateRelationship(element.id, element.redo);
+      } else {
+        updateTable(element.id, element.redo);
+      }
     }
     setUndoStack((prev) => [
       ...prev,
@@ -897,6 +917,18 @@ export default function ControlPanel({
         break;
       case ObjectType.VIEW:
         deleteView(selectedElement.id);
+        break;
+      case ObjectType.RELATIONSHIP:
+        // The selection can outlive the line (undo, DBML edits).
+        if (relationships.some((r) => r.id === selectedElement.id)) {
+          deleteRelationship(selectedElement.id);
+          setSelectedElement((prev) => ({
+            ...prev,
+            element: ObjectType.NONE,
+            id: -1,
+            open: false,
+          }));
+        }
         break;
       default:
         break;

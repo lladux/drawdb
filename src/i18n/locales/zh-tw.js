@@ -147,6 +147,7 @@ const zh_tw = {
     on_update: "更新時",
     on_delete: "刪除時",
     swap: "交換",
+    reset_route: "重設連線路徑",
     one_to_one: "一對一",
     one_to_many: "一對多",
     many_to_one: "多對一",

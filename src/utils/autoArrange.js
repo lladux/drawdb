@@ -3,7 +3,8 @@ import { tableWidth as defaultTableWidth } from "../data/constants";
 import { getTableHeight, getTableWidth } from "./utils";
 
 const nodeSep = 60;
-const rankSep = 110;
+// Wide enough between columns for several lines to run side by side.
+const rankSep = 140;
 const isolatedGap = 60;
 
 export function autoArrange(tables, relationships, settings) {
@@ -31,7 +32,12 @@ export function autoArrange(tables, relationships, settings) {
   const isolated = movable.filter((table) => !connectedIds.has(table.id));
 
   const graph = new graphlib.Graph();
-  graph.setGraph({ rankdir: "LR", nodesep: nodeSep, ranksep: rankSep });
+  graph.setGraph({
+    rankdir: "LR",
+    nodesep: nodeSep,
+    ranksep: rankSep,
+    ranker: "network-simplex",
+  });
   graph.setDefaultEdgeLabel(() => ({}));
 
   for (const table of connected) {
@@ -43,7 +49,9 @@ export function autoArrange(tables, relationships, settings) {
       connectedIds.has(r.startTableId) &&
       connectedIds.has(r.endTableId)
     ) {
-      graph.setEdge(String(r.startTableId), String(r.endTableId));
+      // Referenced (parent) tables go left of the tables that point to them,
+      // so the diagram reads left to right.
+      graph.setEdge(String(r.endTableId), String(r.startTableId));
     }
   }
 

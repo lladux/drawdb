@@ -143,6 +143,7 @@ const es = {
     on_update: "Al actualizar",
     on_delete: "Al eliminar",
     swap: "Intercambiar",
+    reset_route: "Restablecer ruta de la línea",
     one_to_one: "Uno a uno",
     one_to_many: "Uno a muchos",
     many_to_one: "Muchos a uno",

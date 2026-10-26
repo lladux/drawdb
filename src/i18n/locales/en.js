@@ -150,6 +150,7 @@ const en = {
     on_update: "On update",
     on_delete: "On delete",
     swap: "Swap",
+    reset_route: "Reset line route",
     one_to_one: "One to one",
     one_to_many: "One to many",
     many_to_one: "Many to one",

@@ -241,6 +241,15 @@ export const jsonSchema = {
           updateConstraint: { type: "string" },
           deleteConstraint: { type: "string" },
           id: { type: ["integer", "string"] },
+          // Interior corners of a hand-drawn orthogonal route.
+          waypoints: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: { x: { type: "number" }, y: { type: "number" } },
+              required: ["x", "y"],
+            },
+          },
         },
         required: [
           "startTableId",

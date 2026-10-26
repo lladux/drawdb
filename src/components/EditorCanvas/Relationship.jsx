@@ -9,6 +9,7 @@ import {
 } from "react";
 import { Cardinality, ObjectType, Tab } from "../../data/constants";
 import { calcPath, calcCompositePath } from "../../utils/calcPath";
+import { roundedPath } from "../../utils/orthogonalRouting";
 import { useSettings, useLayout, useSelect } from "../../hooks";
 import { useTranslation } from "react-i18next";
 import { SideSheet } from "@douyinfe/semi-ui";
@@ -28,6 +29,9 @@ export default memo(function Relationship({
   startTable,
   endTable,
   relationships,
+  route,
+  selected,
+  onSelect,
 }) {
   const { layout } = useLayout();
   const { selectedElement, setSelectedElement } = useSelect();
@@ -55,6 +59,9 @@ export default memo(function Relationship({
         startTable={startTable}
         endTable={endTable}
         relationships={relationships}
+        route={route}
+        selected={selected}
+        onSelect={onSelect}
         onEdit={edit}
       />
       <SideSheet
@@ -87,6 +94,9 @@ const RelationshipPath = memo(function RelationshipPath({
   startTable,
   endTable,
   relationships,
+  route,
+  selected,
+  onSelect,
   onEdit,
 }) {
   const { settings } = useSettings();
@@ -154,8 +164,9 @@ const RelationshipPath = memo(function RelationshipPath({
   const d = useMemo(() => {
     if (!pathValues) return null;
     if (composite) return composite.path;
+    if (route) return roundedPath(route.points);
     return calcPath(pathValues, 1, settings.showComments);
-  }, [pathValues, composite, settings.showComments]);
+  }, [pathValues, composite, route, settings.showComments]);
 
   const pathRef = useRef();
   const labelRef = useRef();
@@ -225,6 +236,12 @@ const RelationshipPath = memo(function RelationshipPath({
     <g
       className="select-none group"
       onDoubleClick={onEdit}
+      onPointerDown={(e) => {
+        if (e.button !== 0 || !e.isPrimary) return;
+        // Selecting a line shouldn't also start a selection rectangle.
+        e.stopPropagation();
+        onSelect?.(data.id);
+      }}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
@@ -239,8 +256,8 @@ const RelationshipPath = memo(function RelationshipPath({
       <path
         ref={pathRef}
         d={d}
-        className="relationship-path"
-        style={{ stroke: hovered ? undefined : data.color }}
+        className={`relationship-path${selected ? " selected" : ""}`}
+        style={{ stroke: hovered || selected ? undefined : data.color }}
         fill="none"
         cursor="pointer"
       />
