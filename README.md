@@ -1,12 +1,12 @@
 <div align="center">
-    <img width="64" alt="drawDB logo" src="./src/assets/icon-dark.png">
+    <img width="64" alt="drawDB logo" src="drawdb-logo.png">
     <h1>drawDB</h1>
 </div>
 
 <h3 align="center">Free, simple, and intuitive database schema editor and SQL generator.</h3>
 
 > [!NOTE]
-> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm and porting the backend to Python with SQLite storage (`server/`), and replacing the landing page with a hub of diagrams in password-protectable workspaces. Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
+> This is a personal fork of [drawdb-io/drawdb](https://github.com/drawdb-io/drawdb), modified for personal use. It is not affiliated with or endorsed by the drawDB project. Changes from upstream include switching the package manager to pnpm and porting the backend to Python with SQLite storage, and splitting the code into `frontend/` and `backend/`, and replacing the landing page with a hub of diagrams in password-protectable workspaces. Like the original, it is licensed under the [GNU AGPL-3.0](LICENSE).
 
 <div align="center" style="margin-bottom:12px;">
     <a href="https://drawdb.app/" style="display: flex; align-items: center;">
@@ -26,11 +26,26 @@ DrawDB is a robust and user-friendly database entity relationship diagram (ERD) 
 
 ## Getting Started
 
+The repository has two independent parts:
+
+- [`frontend/`](frontend/): the React editor (Vite, pnpm).
+- [`backend/`](backend/README.md): the Python (FastAPI) server that stores diagrams, sharing and version history in SQLite. The editor needs it running to save.
+
 ### Local Development
 
+Start the backend (see [its README](backend/README.md) for configuration):
+
 ```bash
-git clone https://github.com/drawdb-io/drawdb
-cd drawdb
+cd backend
+python3 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python -m app
+```
+
+Then, in another terminal, the frontend:
+
+```bash
+cd frontend
 pnpm install
 pnpm dev
 ```
@@ -38,13 +53,12 @@ pnpm dev
 ### Build
 
 ```bash
-git clone https://github.com/drawdb-io/drawdb
-cd drawdb
+cd frontend
 pnpm install
-pnpm build
+pnpm build   # output in frontend/dist/
 ```
 
-In this fork, diagrams, sharing and version history are stored in SQLite by the Python backend in [`server/`](server/README.md), so it must be running for the editor to save. See its README for setup. Set `VITE_BACKEND_URL` (see `.env.sample`) if it isn't on `http://localhost:5000`.
+Set `VITE_BACKEND_URL` in `frontend/.env` (see `frontend/.env.sample`) if the backend isn't on `http://localhost:5000`.
 
 ## Contributing
 

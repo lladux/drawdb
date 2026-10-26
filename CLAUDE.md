@@ -4,13 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-drawDB is an ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). Upstream is browser-only and stores diagrams in IndexedDB. **In this fork, diagrams, sharing and version history are stored in SQLite by the Python/FastAPI backend in `server/`**, so the editor needs that server running. Templates stay in IndexedDB. The home page (`/`, `src/pages/Hub.jsx`) is a hub of diagrams grouped into workspaces, each optionally password-protected.
+drawDB is an ERD editor and SQL generator (React 18 + Vite, plain JS/JSX, no TypeScript). Upstream is browser-only and stores diagrams in IndexedDB. **In this fork, diagrams, sharing and version history are stored in SQLite by the Python/FastAPI backend**, so the editor needs that server running. Templates stay in IndexedDB. The home page (`/`, `frontend/src/pages/Hub.jsx`) is a hub of diagrams grouped into workspaces, each optionally password-protected.
 
-## Commands
+## Layout
+
+The repo has two independent parts, each with its own toolchain:
+
+- `frontend/`: the React app (pnpm, Vite, ESLint). Run pnpm commands from here. Paths like `src/...` in the sections below are relative to `frontend/`.
+- `backend/`: the FastAPI server (own venv, pytest, ruff). Run its commands from here.
+
+The repo root only holds docs, `.github/`, `.prettierrc.json` (shared, so Prettier also formats the root Markdown) and `.husky/`. The pre-commit hook runs `cd frontend && pnpm exec lint-staged`, and `frontend/package.json`'s `prepare` script runs `cd .. && husky` because the hooks live at the git root.
+
+## Frontend commands
 
 This fork uses **pnpm** (version pinned in `package.json` `packageManager`); don't use npm or add a `package-lock.json`.
 
 ```bash
+cd frontend
 pnpm install
 pnpm dev       # Vite dev server
 pnpm build     # production build to dist/
@@ -18,11 +28,11 @@ pnpm lint      # ESLint, --max-warnings 0 (warnings fail)
 pnpm preview   # serve the built bundle
 ```
 
-Dependency build scripts are blocked unless listed under `allowBuilds` in `pnpm-workspace.yaml` (`@tailwindcss/oxide` and `core-js` are explicitly denied; neither is needed).
+Dependency build scripts are blocked unless listed under `allowBuilds` in `frontend/pnpm-workspace.yaml` (`@tailwindcss/oxide` and `core-js` are explicitly denied; neither is needed).
 
 There is no test suite and no CI; check changes with `pnpm lint` and `pnpm build` locally. A Husky pre-commit hook runs `pnpm exec lint-staged` (ESLint `--fix` + Prettier on staged files).
 
-Backend URL: `src/config/index.js` resolves it in this order: `window.__DRAWDB_CONFIG__` (set by `public/config.js`, empty by default; lets a static host change the URL without rebuilding), then the Vite env var (`.env`, see `.env.sample`), then `http://localhost:5000`.
+Backend URL: `src/config/index.js` resolves it in this order: `window.__DRAWDB_CONFIG__` (set by `public/config.js`, empty by default; lets a static host change the URL without rebuilding), then the Vite env var (`frontend/.env`, see `frontend/.env.sample`), then `http://localhost:5000`.
 
 ## Conventions (from CONTRIBUTING.md)
 
@@ -89,12 +99,12 @@ Diagrams are saved to the backend through the editor's "cloud" extension hooks: 
 
 The UI uses Semi UI (`@douyinfe/semi-ui`) components and Toasts, Tailwind v4 for styling, and Monaco for code editors. All user-facing strings go through `react-i18next` `t(...)`. `src/i18n/locales/en.js` is the source locale; other locales are registered in `src/i18n/i18n.js` (both the import and the `languages` array). RTL handling is in `i18n/utils/rtl.js`. Add new keys to `en.js` at minimum; missing keys fall back to English.
 
-## Backend (`server/`)
+## Backend (`backend/`)
 
-FastAPI app with its own venv; it is independent of the pnpm toolchain. Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (adds tests/lint); `pyproject.toml` only configures pytest and ruff. Run commands from `server/`. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `server/data/drawdb.sqlite3`). See `server/README.md` for the API.
+FastAPI app with its own venv; it is independent of the pnpm toolchain. Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (adds tests/lint); `pyproject.toml` only configures pytest and ruff. Run commands from `backend/`. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `backend/data/drawdb.sqlite3`). See `backend/README.md` for the API.
 
 ```bash
-cd server && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m app                      # run on $PORT (default 5000)
 .venv/bin/pytest                             # all tests
 .venv/bin/pytest tests/test_gists.py::test_compare
@@ -107,6 +117,6 @@ cd server && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.
 - `app/auth.py`: the optional password module: scrypt hashing, HMAC tokens bound to the workspace's current password hash (read from the `X-Workspace-Tokens` header), the `/unlock` route, and the `PasswordAuth`/`NoAuth` policies. `AUTH_ENABLED=false` picks `NoAuth` (all workspaces open, password changes rejected with 400, stored hashes kept). The signing key is generated once and kept in the `meta` table. `GET /config` tells the frontend whether auth is on.
 - `app/storage.py` migrates older databases with `PRAGMA user_version`. Bump `SCHEMA_VERSION` and add a step to `_migrate` when changing existing tables.
 - `app/gist_store.py`: a SQLite stand-in for the GitHub Gists API. Each change stores a full snapshot of the gist's files as a revision with a random 40-hex `version`, and an update that changes nothing creates no revision. `app/gists.py` serves it with GitHub-shaped JSON.
-- Routes and JSON shapes must stay compatible with `src/api/diagrams.js`, `src/api/gists.js` and `src/api/email.js`. `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
+- Routes and JSON shapes must stay compatible with `frontend/src/api/` (`diagrams.js`, `workspaces.js`, `auth.js`, `gists.js`, `email.js`). `GET /gists/{id}/{sha}` is declared last in `app/gists.py` so it doesn't shadow `/commits`.
 - Env vars: `HOST` (default `127.0.0.1`), `PORT`, `DATABASE_PATH`, `AUTH_ENABLED` (default `true`), `CLIENT_URLS` (CORS allowlist; when unset, any localhost origin is allowed), `MAIL_*`, and `NODE_ENV=dev` for open CORS and reload.
 - Routes that touch SQLite or SMTP are sync `def` on purpose, so FastAPI runs the blocking calls in a thread pool.

@@ -13,17 +13,17 @@ The editor needs this server running: diagrams are no longer saved in the browse
 Copy `.env.sample` to `.env` and adjust it.
 
 ```bash
-cd server
+cd backend
 python3 -m venv .venv
 .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m app        # http://127.0.0.1:5000 by default
 ```
 
-`requirements.txt` has what the server needs to run, pinned to tested versions; `requirements-dev.txt` adds the test and lint tools. Run commands from the `server/` directory.
+`requirements.txt` has what the server needs to run, pinned to tested versions; `requirements-dev.txt` adds the test and lint tools. Run commands from the `backend/` directory.
 
-The database is created at `server/data/drawdb.sqlite3` (override with `DATABASE_PATH`). Back up that file to back up all diagrams.
+The database is created at `backend/data/drawdb.sqlite3` (override with `DATABASE_PATH`). Back up that file to back up all diagrams.
 
-The frontend talks to `http://localhost:5000` by default; change it with `VITE_BACKEND_URL`. Without a `.env`, the server accepts requests from any frontend on `localhost`, `127.0.0.1` or `[::1]`; set `CLIENT_URLS` to allow other origins (it then replaces that default).
+The frontend talks to `http://localhost:5000` by default; change it with `VITE_BACKEND_URL` in `frontend/.env`. Without a `.env`, the server accepts requests from any frontend on `localhost`, `127.0.0.1` or `[::1]`; set `CLIENT_URLS` to allow other origins (it then replaces that default).
 
 ## Workspaces and passwords
 
