@@ -119,11 +119,7 @@ export function fromMariaDB(ast, diagramDb = DB.GENERIC) {
               );
               const startFieldName = startFieldNames[0];
 
-              const endTable = findReferencedTable(
-                tables,
-                table,
-                endTableName,
-              );
+              const endTable = findReferencedTable(tables, table, endTableName);
               if (!endTable) return;
 
               const fieldPairs = [];
@@ -149,7 +145,7 @@ export function fromMariaDB(ast, diagramDb = DB.GENERIC) {
               relationship.fields = fieldPairs;
               relationship.endFieldId = fieldPairs[0].endFieldId;
               relationship.startFieldId = fieldPairs[0].startFieldId;
-              relationship.id = nanoid()
+              relationship.id = nanoid();
               let updateConstraint = "No action";
               let deleteConstraint = "No action";
               d.reference_definition.on_action.forEach((c) => {
@@ -264,9 +260,7 @@ export function fromMariaDB(ast, diagramDb = DB.GENERIC) {
             const sf = startTable.fields.find(
               (f) => f.name === startFieldNames[i],
             );
-            const ef = endTable.fields.find(
-              (f) => f.name === endFieldNames[i],
-            );
+            const ef = endTable.fields.find((f) => f.name === endFieldNames[i]);
             if (!sf || !ef) break;
             fieldPairs.push({ startFieldId: sf.id, endFieldId: ef.id });
           }

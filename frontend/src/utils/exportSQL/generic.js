@@ -251,7 +251,9 @@ function tablesToMySQL(obj) {
         .map((c) => `\`${c}\``)
         .join(", ")}) REFERENCES \`${endName}\`(${endColumns
         .map((c) => `\`${c}\``)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n")}`;
 }
@@ -371,7 +373,9 @@ function tablesToPostgreSQL(obj) {
         .map((c) => `"${c}"`)
         .join(", ")}) REFERENCES "${endName}"(${endColumns
         .map((c) => `"${c}"`)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n");
 
@@ -517,7 +521,9 @@ function tablesToMariaDB(obj) {
         .map((c) => `\`${c}\``)
         .join(", ")}) REFERENCES \`${endName}\`(${endColumns
         .map((c) => `\`${c}\``)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n")}`;
 }
@@ -595,7 +601,9 @@ function tablesToSQLServer(obj) {
         .map((c) => `[${c}]`)
         .join(", ")}) REFERENCES [${endName}](${endColumns
         .map((c) => `[${c}]`)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};\nGO`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};\nGO`;
     })
     .join("\n")}`;
 }

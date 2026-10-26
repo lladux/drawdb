@@ -113,8 +113,7 @@ function tablesToMSSQL(diagram) {
         endTable,
       );
 
-      if (startColumns.some((c) => !c) || endColumns.some((c) => !c))
-        return "";
+      if (startColumns.some((c) => !c) || endColumns.some((c) => !c)) return "";
 
       return `\nALTER TABLE [${startTable.name}]
 ADD FOREIGN KEY(${startColumns.map((c) => `[${c}]`).join(", ")})

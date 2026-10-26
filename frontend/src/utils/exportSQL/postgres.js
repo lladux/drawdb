@@ -112,24 +112,20 @@ function tablesToPostgres(diagram) {
         startTable,
         endTable,
       );
-      if (startColumns.some((c) => !c) || endColumns.some((c) => !c))
-        return "";
+      if (startColumns.some((c) => !c) || endColumns.some((c) => !c)) return "";
 
       return `ALTER TABLE "${startTable.name}"\nADD FOREIGN KEY(${startColumns
         .map((c) => `"${c}"`)
         .join(", ")}) REFERENCES "${endTable.name}"(${endColumns
         .map((c) => `"${c}"`)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .filter(Boolean)
     .join("\n");
 
-  return [
-    enumStatements,
-    typeStatements,
-    tableStatements,
-    foreignKeyStatements,
-  ]
+  return [enumStatements, typeStatements, tableStatements, foreignKeyStatements]
     .map((s) => s.trim())
     .filter(Boolean)
     .join("\n\n");

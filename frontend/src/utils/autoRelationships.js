@@ -6,12 +6,16 @@ function singularize(name) {
   if (!name || typeof name !== "string") return "";
   const lower = name.trim().toLowerCase();
   if (lower.endsWith("ies")) return lower.slice(0, -3) + "y";
-  if (lower.endsWith("es") && !lower.endsWith("sses")) return lower.slice(0, -2);
+  if (lower.endsWith("es") && !lower.endsWith("sses"))
+    return lower.slice(0, -2);
   if (lower.endsWith("s") && !lower.endsWith("ss")) return lower.slice(0, -1);
   return lower;
 }
 
-export function findAutoFKRelationships(tables = [], existingRelationships = []) {
+export function findAutoFKRelationships(
+  tables = [],
+  existingRelationships = [],
+) {
   const newRelationships = [];
   const currentRelationships = [...existingRelationships];
 
@@ -25,17 +29,26 @@ export function findAutoFKRelationships(tables = [], existingRelationships = [])
     });
   };
 
-  const isPairAlreadyLinked = (childTableId, fkFieldId, parentTableId, pkFieldId) => {
+  const isPairAlreadyLinked = (
+    childTableId,
+    fkFieldId,
+    parentTableId,
+    pkFieldId,
+  ) => {
     return currentRelationships.some((r) => {
       const pairs = getRelationshipFields(r);
       const forward =
         r.startTableId === childTableId &&
         r.endTableId === parentTableId &&
-        pairs.some((p) => p.startFieldId === fkFieldId && p.endFieldId === pkFieldId);
+        pairs.some(
+          (p) => p.startFieldId === fkFieldId && p.endFieldId === pkFieldId,
+        );
       const backward =
         r.startTableId === parentTableId &&
         r.endTableId === childTableId &&
-        pairs.some((p) => p.startFieldId === pkFieldId && p.endFieldId === fkFieldId);
+        pairs.some(
+          (p) => p.startFieldId === pkFieldId && p.endFieldId === fkFieldId,
+        );
       return forward || backward;
     });
   };
@@ -52,10 +65,10 @@ export function findAutoFKRelationships(tables = [], existingRelationships = [])
 
       // Candidate matching names for the foreign key column in child tables
       const candidateNames = new Set([
-        `${pTableName}_${pkFieldName}`,//users_id
-        `${pSingularName}_${pkFieldName}`,//user_id
-        `${pTableName}${pkFieldName}`,//usersid
-        `${pSingularName}${pkFieldName}`,//userid
+        `${pTableName}_${pkFieldName}`, //users_id
+        `${pSingularName}_${pkFieldName}`, //user_id
+        `${pTableName}${pkFieldName}`, //usersid
+        `${pSingularName}${pkFieldName}`, //userid
       ]);
 
       if (pkFieldName !== "id") {
@@ -72,7 +85,12 @@ export function findAutoFKRelationships(tables = [], existingRelationships = [])
 
           if (
             isFieldAlreadyLinked(childTable.id, fkField.id) ||
-            isPairAlreadyLinked(childTable.id, fkField.id, parentTable.id, pkField.id)
+            isPairAlreadyLinked(
+              childTable.id,
+              fkField.id,
+              parentTable.id,
+              pkField.id,
+            )
           ) {
             return;
           }

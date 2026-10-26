@@ -266,9 +266,7 @@ export function fromMSSQL(ast, diagramDb = DB.GENERIC) {
             const sf = startTable.fields.find(
               (f) => f.name === startFieldNames[i],
             );
-            const ef = endTable.fields.find(
-              (f) => f.name === endFieldNames[i],
-            );
+            const ef = endTable.fields.find((f) => f.name === endFieldNames[i]);
             if (!sf || !ef) break;
             fieldPairs.push({ startFieldId: sf.id, endFieldId: ef.id });
           }

@@ -318,34 +318,34 @@ export default function TableInfo({ data }) {
             <Collapse.Panel header={t("comment")} itemKey="1">
               <TextArea
                 field="comment"
-              value={data.comment}
-              readonly={layout.readOnly}
-              autosize
-              placeholder={t("comment")}
-              rows={1}
-              onChange={(value) =>
-                updateTable(data.id, { comment: value }, false)
-              }
-              onFocus={(e) => setEditField({ comment: e.target.value })}
-              onBlur={(e) => {
-                if (e.target.value === editField.comment) return;
-                setUndoStack((prev) => [
-                  ...prev,
-                  {
-                    action: Action.EDIT,
-                    element: ObjectType.TABLE,
-                    component: "self",
-                    tid: data.id,
-                    undo: editField,
-                    redo: { comment: e.target.value },
-                    message: t("edit_table", {
-                      tableName: e.target.value,
-                      extra: "[comment]",
-                    }),
-                  },
-                ]);
-                setRedoStack([]);
-              }}
+                value={data.comment}
+                readonly={layout.readOnly}
+                autosize
+                placeholder={t("comment")}
+                rows={1}
+                onChange={(value) =>
+                  updateTable(data.id, { comment: value }, false)
+                }
+                onFocus={(e) => setEditField({ comment: e.target.value })}
+                onBlur={(e) => {
+                  if (e.target.value === editField.comment) return;
+                  setUndoStack((prev) => [
+                    ...prev,
+                    {
+                      action: Action.EDIT,
+                      element: ObjectType.TABLE,
+                      component: "self",
+                      tid: data.id,
+                      undo: editField,
+                      redo: { comment: e.target.value },
+                      message: t("edit_table", {
+                        tableName: e.target.value,
+                        extra: "[comment]",
+                      }),
+                    },
+                  ]);
+                  setRedoStack([]);
+                }}
               />
             </Collapse.Panel>
           </Collapse>

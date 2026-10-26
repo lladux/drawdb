@@ -81,7 +81,9 @@ function tablesToMariaDB(diagram) {
         .map((c) => `\`${c}\``)
         .join(", ")}) REFERENCES \`${endName}\`(${endColumns
         .map((c) => `\`${c}\``)
-        .join(", ")})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
+        .join(
+          ", ",
+        )})\nON UPDATE ${r.updateConstraint.toUpperCase()} ON DELETE ${r.deleteConstraint.toUpperCase()};`;
     })
     .join("\n")}`;
 }

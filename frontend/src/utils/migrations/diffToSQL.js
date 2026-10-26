@@ -458,12 +458,8 @@ export const generateMigrationSQL = (
                     `EXEC sp_addextendedproperty @name=N'MS_Description', @value=N'${escapeQuotes(String(change.from ?? "")).replace(/'/g, "''")}', @level0type=N'SCHEMA',@level0name=N'dbo', @level1type=N'TABLE',@level1name=N'${name}', @level2type=N'COLUMN',@level2name=N'${columnName}';`,
                   );
                 } else if (database === DB.SQLITE) {
-                  up.push(
-                    `-- ${escapeQuotes(String(change.to ?? ""))};`,
-                  );
-                  down.push(
-                    `-- ${escapeQuotes(String(change.from ?? ""))};`,
-                  );
+                  up.push(`-- ${escapeQuotes(String(change.to ?? ""))};`);
+                  down.push(`-- ${escapeQuotes(String(change.from ?? ""))};`);
                 } else {
                   up.push(
                     `COMMENT ON COLUMN ${q(name)}.${q(columnName)} IS '${escapeQuotes(String(change.to ?? ""))}';`,

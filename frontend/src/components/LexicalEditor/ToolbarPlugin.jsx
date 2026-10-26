@@ -159,8 +159,8 @@ function FloatingLinkEditor({ editor }) {
           updateLinkEditor();
           return true;
         },
-        LowPriority
-      )
+        LowPriority,
+      ),
     );
   }, [editor, updateLinkEditor]);
 
@@ -451,7 +451,7 @@ export default function ToolbarPlugin() {
           updateToolbar();
           return false;
         },
-        LowPriority
+        LowPriority,
       ),
       editor.registerCommand(
         CAN_UNDO_COMMAND,
@@ -459,7 +459,7 @@ export default function ToolbarPlugin() {
           setCanUndo(payload);
           return false;
         },
-        LowPriority
+        LowPriority,
       ),
       editor.registerCommand(
         CAN_REDO_COMMAND,
@@ -467,8 +467,8 @@ export default function ToolbarPlugin() {
           setCanRedo(payload);
           return false;
         },
-        LowPriority
-      )
+        LowPriority,
+      ),
     );
   }, [editor, updateToolbar]);
 
@@ -484,7 +484,7 @@ export default function ToolbarPlugin() {
         }
       });
     },
-    [editor, selectedElementKey]
+    [editor, selectedElementKey],
   );
 
   const insertLink = useCallback(() => {
@@ -583,10 +583,7 @@ export default function ToolbarPlugin() {
             <i className="bi bi-link" />
           </button>
           {isLink &&
-            createPortal(
-              <FloatingLinkEditor editor={editor} />,
-              document.body
-            )}
+            createPortal(<FloatingLinkEditor editor={editor} />, document.body)}
           <Divider />
           <button
             onClick={() =>
