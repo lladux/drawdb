@@ -19,6 +19,8 @@ python3 -m venv .venv
 .venv/bin/python -m app        # http://127.0.0.1:5000 by default
 ```
 
+With the venv active, `fastapi dev --port 5000` also works (auto-reload on code changes). Pass `--port 5000`: the CLI ignores `PORT` and defaults to 8000, which the frontend doesn't use.
+
 `requirements.txt` has what the server needs to run, pinned to tested versions; `requirements-dev.txt` adds the test and lint tools. Run commands from the `backend/` directory.
 
 The database is created at `backend/data/drawdb.sqlite3` (override with `DATABASE_PATH`). Back up that file to back up all diagrams.

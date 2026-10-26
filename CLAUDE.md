@@ -101,11 +101,12 @@ The UI uses Semi UI (`@douyinfe/semi-ui`) components and Toasts, Tailwind v4 for
 
 ## Backend (`backend/`)
 
-FastAPI app with its own venv; it is independent of the pnpm toolchain. Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (adds tests/lint); `pyproject.toml` only configures pytest and ruff. Run commands from `backend/`. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `backend/data/drawdb.sqlite3`). See `backend/README.md` for the API.
+FastAPI app with its own venv; it is independent of the pnpm toolchain. Dependencies are pinned in `requirements.txt` (runtime) and `requirements-dev.txt` (adds tests/lint); `pyproject.toml` only configures pytest, ruff and the `fastapi` CLI entrypoint. Run commands from `backend/`. Storage is SQLite via the stdlib `sqlite3` (`app/storage.py`, schema created on startup, default file `backend/data/drawdb.sqlite3`). See `backend/README.md` for the API.
 
 ```bash
 cd backend && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 .venv/bin/python -m app                      # run on $PORT (default 5000)
+.venv/bin/fastapi dev --port 5000            # same, via app/asgi.py, with reload
 .venv/bin/pytest                             # all tests
 .venv/bin/pytest tests/test_gists.py::test_compare
 .venv/bin/ruff check . && .venv/bin/ruff format --check .

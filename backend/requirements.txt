@@ -1,3 +1,4 @@
 fastapi==0.150.0
+fastapi-cli==0.0.32
 uvicorn[standard]==0.54.0
 python-dotenv==1.2.4

@@ -7,3 +7,7 @@ pythonpath = ["."]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+# Lets `fastapi dev` / `fastapi run` find the app without arguments.
+[tool.fastapi]
+entrypoint = "app.asgi:app"
