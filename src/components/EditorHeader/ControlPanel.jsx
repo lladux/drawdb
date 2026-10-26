@@ -95,6 +95,8 @@ import { jsonToDocumentation } from "../../utils/exportAs/documentation";
 import { IdContext } from "../Workspace";
 import { socials } from "../../data/socials";
 import { toDBML } from "../../utils/exportAs/dbml";
+import { jsonToSQLAlchemy } from "../../utils/exportAs/sqlalchemy";
+import { jsonToEntityFramework } from "../../utils/exportAs/efcore";
 import { applyDiagramPlan } from "../../utils/dbml/applyPlan";
 import { diffDiagram } from "../../utils/dbml/diff";
 import { exportSavedData } from "../../utils/exportSavedData";
@@ -1569,6 +1571,41 @@ export default function ControlPanel({
                 ...prev,
                 data: result,
                 extension: "dbml",
+              }));
+            },
+          },
+          {
+            name: "SQLAlchemy",
+            function: () => {
+              openExportModal(MODAL.CODE);
+              const result = jsonToSQLAlchemy({
+                tables,
+                relationships,
+                enums,
+                database,
+              });
+              setExportData((prev) => ({
+                ...prev,
+                data: result,
+                extension: "py",
+              }));
+            },
+          },
+          {
+            name: "Entity Framework",
+            function: () => {
+              openExportModal(MODAL.CODE);
+              const result = jsonToEntityFramework({
+                tables,
+                relationships,
+                enums,
+                database,
+                title,
+              });
+              setExportData((prev) => ({
+                ...prev,
+                data: result,
+                extension: "cs",
               }));
             },
           },
