@@ -37,8 +37,7 @@ const mn = {
     undo: "Буцах",
     redo: "Дахин хийх",
     clear: "Цэвэрлэх",
-    are_you_sure_clear:
-      "Диаграмм цэвэрлэх үү? Буцаах боломжгүй.",
+    are_you_sure_clear: "Диаграмм цэвэрлэх үү? Буцаах боломжгүй.",
     cut: "Таслах",
     copy: "Хуулах",
     paste: "Наах",
@@ -150,7 +149,6 @@ const mn = {
     table_deleted: "Хүснэгт устгагдлаа",
     area_deleted: "Бүс устгагдлаа",
     note_deleted: "Тэмдэглэл устгагдлаа",
-    relationship_deleted: "Харилцаа устгагдлаа",
     type_deleted: "Төрөл устгагдлаа",
     cannot_connect: "Холбож чадахгүй — баганын төрлүүд өөр байна",
     copied_to_clipboard: "Хуулбарлагдлаа",
@@ -167,16 +165,12 @@ const mn = {
     upload_sql_to_generate_diagrams:
       "Хүснэгт болон багануудыг автоматаар үүсгэхийн тулд SQL файл оруулна уу.",
     overwrite_existing_diagram: "Одоогийн диаграммыг дарж бичих",
-    only_mysql_supported:
-      "*Одоогоор зөвхөн MySQL скриптийн импорт дэмжигдэж байна.",
     blank: "Хоосон",
     filename: "Файлын нэр",
     table_w_no_name: "Нэргүй хүснэгт тодорхойлогдсон",
     duplicate_table_by_name: "Давхардсан хүснэгт: '{{tableName}}'",
-    empty_field_name:
-      "'{{tableName}}' хүснэгт дэх хоосон баганын `name`",
-    empty_field_type:
-      "'{{tableName}}' хүснэгт дэх хоосон баганын `type`",
+    empty_field_name: "'{{tableName}}' хүснэгт дэх хоосон баганын `name`",
+    empty_field_type: "'{{tableName}}' хүснэгт дэх хоосон баганын `type`",
     no_values_for_field:
       "'{{tableName}}' хүснэгтийн '{{fieldName}}' багана `{{type}}` төрөлтэй боловч утга заагаагүй байна",
     default_doesnt_match_type:
@@ -187,18 +181,13 @@ const mn = {
       "'{{tableName}}' хүснэгтэд '{{fieldName}}' нэртэй давхар багана байна",
     duplicate_index:
       "'{{tableName}}' хүснэгтэд '{{indexName}}' нэртэй давхар индекс байна",
-    empty_index:
-      "'{{tableName}}' хүснэгтийн индекс ямар ч багана сонгоогүй",
-    no_primary_key:
-      "'{{tableName}}' хүснэгтэд үндсэн түлхүүр алга",
+    empty_index: "'{{tableName}}' хүснэгтийн индекс ямар ч багана сонгоогүй",
+    no_primary_key: "'{{tableName}}' хүснэгтэд үндсэн түлхүүр алга",
     type_with_no_name: "Нэргүй төрөл тодорхойлогдсон",
     duplicate_types: "'{{typeName}}' нэртэй давхар төрөл",
-    type_w_no_fields:
-      "'{{typeName}}' төрөл баганагүй хоосон байна",
-    empty_type_field_name:
-      "'{{typeName}}' төрөл дэх хоосон баганын `name`",
-    empty_type_field_type:
-      "'{{typeName}}' төрөл дэх хоосон баганын `type`",
+    type_w_no_fields: "'{{typeName}}' төрөл баганагүй хоосон байна",
+    empty_type_field_name: "'{{typeName}}' төрөл дэх хоосон баганын `name`",
+    empty_type_field_type: "'{{typeName}}' төрөл дэх хоосон баганын `type`",
     no_values_for_type_field:
       "'{{typeName}}' төрөл дэх '{{fieldName}}' багана `{{type}}` боловч утга үгүй",
     duplicate_type_fields:
@@ -207,10 +196,7 @@ const mn = {
     circular_dependency:
       "'{{refName}}' хүснэгттэй холбоотой тойрог хамаарал илэрлээ",
     timeline: "Цагийн шугам",
-    details: "Дэлгэрэнгүй",
     no_activity: "Үйл ажиллагаа алга.",
-    move_element:
-      "'{{name}}' элементийг '{{coords}}' руу шилжүүлэв",
     edit_area: "Бүс засах {{areaName}} {{extra}}",
     delete_area: "Бүс устгах {{areaName}}",
     edit_note: "Тэмдэглэл засах {{noteTitle}} {{extra}}",
@@ -238,27 +224,20 @@ const mn = {
     no_enums: "Enum байхгүй",
     no_enums_text: "Энд enum-уудыг тодорхойлно уу",
     declare_array: "Массив зарлах",
-    empty_index_name:
-      "'{{tableName}}' хүснэгтэд нэргүй индекс тодорхойлогдсон",
-    didnt_find_diagram: "Өө! Диаграмм олдсонгүй.",
+    empty_index_name: "'{{tableName}}' хүснэгтэд нэргүй индекс тодорхойлогдсон",
     unsigned: "Тэмдэггүй",
     share: "Хуваалцах",
     unshare: "Хуваалцахыг цуцлах",
     copy_link: "Холбоос хуулбарлах",
-    readme: "README",
-    failed_to_load:
-      "Ачаалахад алдаа гарлаа. Холбоос зөв эсэхийг шалгана уу.",
+    failed_to_load: "Ачаалахад алдаа гарлаа. Холбоос зөв эсэхийг шалгана уу.",
     share_info:
       "* Энэ холбоосыг хуваалцах нь бодит цагийн хамтын ажиллагаа биш.",
-    show_relationship_labels:
-      "Харилцааны шошго харуулах",
+    show_relationship_labels: "Харилцааны шошго харуулах",
     docs: "Баримт бичиг",
     supported_types: "Дэмжигдэх файл төрлүүд:",
     bulk_update: "Бөөн шинэчлэлт",
-    multiselect: "Олон сонголт",
     export_saved_data: "Хадгалсан өгөгдлийг экспортлох",
     dbml_view: "DBML харагдалт",
-    tab_view: "Tab харагдалт",
     label: "Шошго",
     many_side_label: "Олон талын шошго (n)",
     version: "Хувилбар",
@@ -269,18 +248,14 @@ const mn = {
     read_only: "Зөвхөн унших",
     continue: "Үргэлжлүүлэх",
     restore_version: "Хувилбар сэргээх",
-    restore_warning:
-      "Хувилбар ачаалбал одоогийн өөрчлөлтүүд дарж бичигдэнэ.",
+    restore_warning: "Хувилбар ачаалбал одоогийн өөрчлөлтүүд дарж бичигдэнэ.",
     return_to_current: "Одоогийн диаграмм руу буцах",
     no_changes_to_record: "Бүртгэх өөрчлөлт алга",
-    click_to_view: "Харах бол дарна уу",
     load_more: "Илүү ачаалах",
     clear_cache: "Кэш цэвэрлэх",
     cache_cleared: "Кэш цэвэрлэгдлээ",
-    failed_to_record_version:
-      "Хувилбар бүртгэхэд алдаа гарлаа",
-    failed_to_load_diagram:
-      "Диаграмм ачаалахад алдаа гарлаа",
+    failed_to_record_version: "Хувилбар бүртгэхэд алдаа гарлаа",
+    failed_to_load_diagram: "Диаграмм ачаалахад алдаа гарлаа",
     see_all: "Бүгдийг харах",
     insert_sql: "SQL оруулах",
     upload_file: "Файл оруулах",
@@ -296,25 +271,27 @@ const mn = {
     auto_arrange: "Автоматаар байрлуулах",
     auto_connect_fk: "Гадаад түлхүүрүүдийг автоматаар холбох",
     auto_connect_fk_success: "{{count}} гадаад түлхүүрийн холбоос үүсгэлээ",
-    no_foreign_keys_found: "Харилцаа олдсонгүй",
     all_relations_already_connected: "Бүх харилцаа аль хэдийн холбогдсон байна",
     auto_connect_fk_modal_title: "Гадаад түлхүүрүүдийг автоматаар холбох",
-    auto_connect_fk_modal_description: "PK/FK харилцааг автоматаар үүсгэхийн тулд таны баганууд нэрлэх стандарт дүрмийг баримталсан байх ёстой:",
-    auto_connect_fk_rule_1: "Хүснэгтийн угтвар + PK багана (ж.нь, 'id' үндсэн түлхүүртэй 'users' хүснэгтийн хувьд user_id эсвэл users_id)",
-    auto_connect_fk_rule_2: "PK баганын нэр таарах (ж.нь, эх хүснэгтийн author_id-тай таарах author_id)",
-    auto_connect_fk_modal_question: "Диаграммыг шалгаж, тохирох харилцаануудыг үүсгэх үү?",
+    auto_connect_fk_modal_description:
+      "PK/FK харилцааг автоматаар үүсгэхийн тулд таны баганууд нэрлэх стандарт дүрмийг баримталсан байх ёстой:",
+    auto_connect_fk_rule_1:
+      "Хүснэгтийн угтвар + PK багана (ж.нь, 'id' үндсэн түлхүүртэй 'users' хүснэгтийн хувьд user_id эсвэл users_id)",
+    auto_connect_fk_rule_2:
+      "PK баганын нэр таарах (ж.нь, эх хүснэгтийн author_id-тай таарах author_id)",
+    auto_connect_fk_modal_question:
+      "Диаграммыг шалгаж, тохирох харилцаануудыг үүсгэх үү?",
     migrations: "Шилжүүлгүүд",
     generate_migration: "Шилжүүлэг үүсгэх",
     migration_not_supported_generic: "Ердийн диаграммд шилжүүлэг дэмжигдэхгүй.",
     no_migration_needed: "Шилжүүлэг шаардлагагүй",
     scripts: "Скриптүүд",
     json_diff: "JSON ялгаа",
-    download: "Татах",
     show_comments: "Тайлбаруудыг харуулах",
     configure_custom_types: "Өөрийн төрлүүдийг тохируулах",
     type_color: "Өнгө",
-    custom_types_description: "Анхдагчаар дэмжигддэггүй өөрийн өгөгдлийн төрлүүдийг тодорхойлно уу. Эдгээр төрлүүд багана үүсгэх эсвэл засах үед боломжтой болно.",
-    type_data_corrupted: "Тохируулсан төрлүүд гэмтсэн байна.",
+    custom_types_description:
+      "Анхдагчаар дэмжигддэггүй өөрийн өгөгдлийн төрлүүдийг тодорхойлно уу. Эдгээр төрлүүд багана үүсгэх эсвэл засах үед боломжтой болно.",
     no_custom_types: "Танд тохируулсан төрөл байхгүй",
     close: "Хаах",
     add_custom_type: "Өөрийн төрөл нэмэх",
@@ -329,8 +306,6 @@ const mn = {
     force_hide: "Албадан нуух",
     primary_key: "Үндсэн түлхүүр",
     foreign_key: "Гадаад түлхүүр",
-    import_with_ai: "AI-аар импортлох",
-    ai_import_failed: "AI импорт амжилтгүй боллоо. Дахин оролдоно уу.",
     views: "Харагдацууд",
     add_view: "Харагдац нэмэх",
     edit_view: "Харагдац засах {{viewName}} {{extra}}",
@@ -354,17 +329,22 @@ const mn = {
     view_w_no_name: "Нэргүй харагдац",
     view_w_no_base_table: "'{{viewName}}' харагдацад суурь хүснэгт байхгүй",
     duplicate_views: "'{{viewName}}' нэртэй давхар харагдацууд",
-    view_name_clashes_w_table: "'{{viewName}}' харагдац хүснэгттэй ижил нэртэй байна",
+    view_name_clashes_w_table:
+      "'{{viewName}}' харагдац хүснэгттэй ижил нэртэй байна",
     join_w_no_table: "'{{viewName}}' харагдацад хүснэгтгүй холболт байна",
-    join_w_no_condition: "'{{viewName}}' харагдацын '{{tableName}}' дээрх холболтод нөхцөл байхгүй",
-    join_out_of_order: "'{{viewName}}' харагдацын '{{tableName}}' дээрх холболт түүнээс хойш холбогдсон хүснэгтийг заасан байна",
+    join_w_no_condition:
+      "'{{viewName}}' харагдацын '{{tableName}}' дээрх холболтод нөхцөл байхгүй",
+    join_out_of_order:
+      "'{{viewName}}' харагдацын '{{tableName}}' дээрх холболт түүнээс хойш холбогдсон хүснэгтийг заасан байна",
     empty_view_column: "'{{viewName}}' харагдацад хоосон гаралтын багана байна",
-    duplicate_view_columns: "'{{viewName}}' харагдацад '{{columnName}}' гэсэн давхар гаралтын багана байна",
+    duplicate_view_columns:
+      "'{{viewName}}' харагдацад '{{columnName}}' гэсэн давхар гаралтын багана байна",
     lock: "Түгжих",
     unlock: "Түгжээ тайлах",
     edit_dbml: "DBML засах",
     dbml_problem: "Ln {{line}}, Col {{column}}: {{message}}",
-    move_to_cloud_prompt: "Энэ диаграмм таны хөтөч дээр локалаар хадгалагдсан. Үүл рүү зөөх үү?",
+    move_to_cloud_prompt:
+      "Энэ диаграмм таны хөтөч дээр локалаар хадгалагдсан. Үүл рүү зөөх үү?",
     move: "Зөөх",
     dismiss: "Хаах",
     view_actions: "Харагдацын үйлдлүүд",
@@ -376,29 +356,32 @@ const mn = {
     collapse_unlinked_columns: "Холбогдоогүй баганыг хураах",
     note_actions: "Тэмдэглэлийн үйлдлүүд",
     area_actions: "Талбайн үйлдлүүд",
-    database_icon: "{{databaseName}} дүрс",
     database_diagram: "{{databaseName}} диаграмм",
     templates: "Загварууд",
     diagrams: "Диаграммууд",
     logo: "лого",
-    check_syntax_errors: "Синтаксийн алдааг шалгах эсвэл алдааны талаар бидэнд мэдэгдэнэ үү.",
+    check_syntax_errors:
+      "Синтаксийн алдааг шалгах эсвэл алдааны талаар бидэнд мэдэгдэнэ үү.",
     parse_error_at: "{{name}} [Ln {{line}}, Col {{column}}]: {{message}}",
     overwrite_checkbox: "дарж бичих сонголт",
     file_contains_error: "Файлд алдаа байна.",
-    file_missing_diagram_properties: "Файлд диаграммын шаардлагатай шинж чанарууд дутуу байна.",
-    imported_diagram_database_mismatch: "Импортолсон диаграмм болон нээлттэй диаграмм өөр өөр өгөгдлийн сан ашиглаж байна.",
-    relationship_references_missing_table: "{{relationshipName}} харилцаа байхгүй хүснэгтийг заасан байна.",
-    relationship_references_missing_field: "{{relationshipName}} харилцаа байхгүй баганыг заасан байна.",
+    file_missing_diagram_properties:
+      "Файлд диаграммын шаардлагатай шинж чанарууд дутуу байна.",
+    imported_diagram_database_mismatch:
+      "Импортолсон диаграмм болон нээлттэй диаграмм өөр өөр өгөгдлийн сан ашиглаж байна.",
+    relationship_references_missing_table:
+      "{{relationshipName}} харилцаа байхгүй хүснэгтийг заасан байна.",
+    relationship_references_missing_field:
+      "{{relationshipName}} харилцаа байхгүй баганыг заасан байна.",
     ready_to_import: "Бүх зүйл хэвийн байна. Одоо импортлож болно.",
-    import_will_overwrite_current: "Одоогийн диаграмм хоосон биш байна. Шинэ диаграмм импортлох нь одоогийн өөрчлөлтүүдийг дарж бичнэ.",
+    import_will_overwrite_current:
+      "Одоогийн диаграмм хоосон биш байна. Шинэ диаграмм импортлох нь одоогийн өөрчлөлтүүдийг дарж бичнэ.",
     all: "Бүгд",
     all_databases: "Бүх өгөгдлийн сан",
     all_types: "Бүх төрөл",
     cloud: "Үүл",
     local: "Локал",
     you: "Та",
-    owner: "Эзэмшигч",
-    user_with_id: "Хэрэглэгч {{id}}",
     no_diagrams_match_filters: "Шүүлтүүрт тохирох диаграмм алга.",
     failed_to_load_short: "Ачаалж чадсангүй",
     invalid_dbml: "Буруу DBML",

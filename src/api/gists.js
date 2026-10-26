@@ -26,10 +26,6 @@ export async function patch(gistId, filename, content) {
   return data.deleted;
 }
 
-export async function del(gistId) {
-  await axios.delete(`${baseUrl}/gists/${gistId}`);
-}
-
 export async function get(gistId) {
   const res = await axios.get(`${baseUrl}/gists/${gistId}`);
 

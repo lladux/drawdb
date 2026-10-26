@@ -37,8 +37,7 @@ const tm = {
     undo: "செயல்தவிர்",
     redo: "மீண்டும் செய்",
     clear: "அழி",
-    are_you_sure_clear:
-      "வரைபடத்தை அழிக்க வேண்டுமா? இது மாற்ற முடியாதது.",
+    are_you_sure_clear: "வரைபடத்தை அழிக்க வேண்டுமா? இது மாற்ற முடியாதது.",
     cut: "வெட்டு",
     copy: "நகலெடு",
     paste: "ஒட்டு",
@@ -103,9 +102,11 @@ const tm = {
     no_tables: "அட்டவணைகள் இல்லை",
     no_tables_text: "உங்கள் வரைபடத்தை உருவாக்கத் தொடங்குங்கள்!",
     no_relationships: "உறவுகள் இல்லை",
-    no_relationships_text: "நெடுவரிசைகளை இணைக்க இழுத்து உறவுகளை உருவாக்குங்கள்!",
+    no_relationships_text:
+      "நெடுவரிசைகளை இணைக்க இழுத்து உறவுகளை உருவாக்குங்கள்!",
     no_subject_areas: "பொருள் பகுதிகள் இல்லை",
-    no_subject_areas_text: "அட்டவணைகளை குழுவாக்க பொருள் பகுதிகளைச் சேர்க்கவும்!",
+    no_subject_areas_text:
+      "அட்டவணைகளை குழுவாக்க பொருள் பகுதிகளைச் சேர்க்கவும்!",
     no_notes: "குறிப்புகள் இல்லை",
     no_notes_text: "கூடுதல் தகவல்களைப் பதிவுசெய்ய குறிப்புகளை பயன்படுத்துங்கள்",
     no_types: "வகைகள் இல்லை",
@@ -123,7 +124,8 @@ const tm = {
     autoincrement: "தானாக அதிகரிப்பு",
     default_value: "இயல்புநிலை",
     check: "சரிபார்ப்பு வெளிப்பாடு",
-    this_will_appear_as_is: "*இது உருவாக்கப்படும் ஸ்கிரிப்டில் அப்படியே தோன்றும்.",
+    this_will_appear_as_is:
+      "*இது உருவாக்கப்படும் ஸ்கிரிப்டில் அப்படியே தோன்றும்.",
     comment: "கருத்து",
     add_field: "நெடுவரிசை சேர்",
     values: "மதிப்புகள்",
@@ -150,7 +152,6 @@ const tm = {
     table_deleted: "அட்டவணை நீக்கப்பட்டது",
     area_deleted: "பகுதி நீக்கப்பட்டது",
     note_deleted: "குறிப்பு நீக்கப்பட்டது",
-    relationship_deleted: "உறவு நீக்கப்பட்டது",
     type_deleted: "வகை நீக்கப்பட்டது",
     cannot_connect: "இணைக்க முடியாது, நெடுவரிசை வகைகள் பொருந்தவில்லை",
     copied_to_clipboard: "கிளிப்போர்டுக்கு நகலெடுக்கப்பட்டது",
@@ -168,13 +169,10 @@ const tm = {
     upload_sql_to_generate_diagrams:
       "அட்டவணைகள் மற்றும் நெடுவரிசைகளை தானாக உருவாக்க SQL கோப்பை பதிவேற்றவும்.",
     overwrite_existing_diagram: "ஏற்கனவே உள்ள வரைபடத்தை மேலெழுது",
-    only_mysql_supported:
-      "*இப்போது MySQL ஸ்கிரிப்ட் ஏற்றுதலே ஆதரிக்கப்படுகிறது.",
     blank: "வெற்று",
     filename: "கோப்புப் பெயர்",
     table_w_no_name: "பெயர் இல்லாத அட்டவணை அறிவிக்கப்பட்டது",
-    duplicate_table_by_name:
-      "'{{tableName}}' என்ற பெயரில் நகல் அட்டவணை",
+    duplicate_table_by_name: "'{{tableName}}' என்ற பெயரில் நகல் அட்டவணை",
     empty_field_name:
       "'{{tableName}}' அட்டவணையில் `name` நெடுவரிசை வெறுமையாக உள்ளது",
     empty_field_type:
@@ -191,12 +189,10 @@ const tm = {
       "'{{tableName}}' அட்டவணையில் '{{indexName}}' என்ற நகல் குறியீடு",
     empty_index:
       "'{{tableName}}' அட்டவணையில் குறியீடு எந்த நெடுவரிசைகளையும் குறியிடவில்லை",
-    no_primary_key:
-      "'{{tableName}}' அட்டவணையில் முதன்மை விசை இல்லை",
+    no_primary_key: "'{{tableName}}' அட்டவணையில் முதன்மை விசை இல்லை",
     type_with_no_name: "பெயர் இல்லாத வகை அறிவிக்கப்பட்டது",
     duplicate_types: "'{{typeName}}' என்ற நகல் வகைகள்",
-    type_w_no_fields:
-      "'{{typeName}}' வகையில் நெடுவரிசைகள் எதுவும் இல்லை",
+    type_w_no_fields: "'{{typeName}}' வகையில் நெடுவரிசைகள் எதுவும் இல்லை",
     empty_type_field_name:
       "'{{typeName}}' வகையில் `name` நெடுவரிசை வெறுமையாக உள்ளது",
     empty_type_field_type:
@@ -205,14 +201,10 @@ const tm = {
       "'{{typeName}}' வகையின் '{{fieldName}}' நெடுவரிசை `{{type}}` வகை, ஆனால் மதிப்புகள் இல்லை",
     duplicate_type_fields:
       "'{{typeName}}' வகையில் '{{fieldName}}' என்ற நகல் நெடுவரிசைகள்",
-    duplicate_reference:
-      "'{{refName}}' என்ற நகல் குறிப்பு",
-    circular_dependency:
-      "'{{refName}}' அட்டவணையை உள்ளடக்கிய வட்ட சார்பு",
+    duplicate_reference: "'{{refName}}' என்ற நகல் குறிப்பு",
+    circular_dependency: "'{{refName}}' அட்டவணையை உள்ளடக்கிய வட்ட சார்பு",
     timeline: "காலவரிசை",
-    details: "விவரங்கள்",
     no_activity: "செயல்பாடுகள் இல்லை.",
-    move_element: "{{name}} ஐ {{coords}} க்கு நகர்த்து",
     edit_area: "{{extra}} {{areaName}} பகுதியைத் திருத்து",
     delete_area: "{{areaName}} பகுதியை நீக்கு",
     edit_note: "{{extra}} {{noteTitle}} குறிப்பைத் திருத்து",
@@ -222,10 +214,8 @@ const tm = {
     edit_type: "{{extra}} {{typeName}} வகையைத் திருத்து",
     delete_type: "{{typeName}} வகையை நீக்கு",
     add_relationship: "உறவு சேர்",
-    edit_relationship:
-      "{{extra}} {{refName}} உறவைத் திருத்து",
-    delete_relationship:
-      "{{refName}} உறவை நீக்கு",
+    edit_relationship: "{{extra}} {{refName}} உறவைத் திருத்து",
+    delete_relationship: "{{refName}} உறவை நீக்கு",
     not_found: "காணப்படவில்லை",
     pick_db: "தரவுத்தளத்தைத் தேர்ந்தெடு",
     generic: "பொதுவான",
@@ -236,35 +226,26 @@ const tm = {
     edit_enum: "{{extra}} {{enumName}} எண்ணலைத் திருத்து",
     delete_enum: "எண்ணலை நீக்கு",
     enum_w_no_name: "பெயர் இல்லாத எண்ணல் கண்டறியப்பட்டது",
-    enum_w_no_values:
-      "'{{enumName}}' எண்ணலுக்கு மதிப்புகள் இல்லை",
-    duplicate_enums:
-      "'{{enumName}}' என்ற நகல் எண்ணல்கள்",
+    enum_w_no_values: "'{{enumName}}' எண்ணலுக்கு மதிப்புகள் இல்லை",
+    duplicate_enums: "'{{enumName}}' என்ற நகல் எண்ணல்கள்",
     enum_deleted: "எண்ணல் நீக்கப்பட்டது",
     no_enums: "எண்ணல்கள் இல்லை",
     no_enums_text: "எண்ணல்களை இங்கே சேர்க்கவும்",
     declare_array: "அணியை அறிவி",
-    empty_index_name:
-      "'{{tableName}}' அட்டவணையில் பெயர் இல்லாத குறியீடு",
-    didnt_find_diagram: "வரைபடம் கிடைக்கவில்லை.",
+    empty_index_name: "'{{tableName}}' அட்டவணையில் பெயர் இல்லாத குறியீடு",
     unsigned: "குறியற்ற",
     share: "பகிர்",
     unshare: "பகிர்வை நிறுத்து",
     copy_link: "இணைப்பை நகலெடு",
-    readme: "README",
-    failed_to_load:
-      "ஏற்ற முடியவில்லை. இணைப்பு சரியானதா என சரிபார்க்கவும்.",
+    failed_to_load: "ஏற்ற முடியவில்லை. இணைப்பு சரியானதா என சரிபார்க்கவும்.",
     share_info:
       "* இந்த இணைப்பைப் பகிர்வது நேரடி ஒத்துழைப்பு அமர்வை உருவாக்காது.",
-    show_relationship_labels:
-      "உறவு லேபிள்களை காட்டு",
+    show_relationship_labels: "உறவு லேபிள்களை காட்டு",
     docs: "ஆவணங்கள்",
     supported_types: "ஆதரிக்கப்படும் கோப்பு வகைகள்:",
     bulk_update: "மொத்த புதுப்பிப்பு",
-    multiselect: "பல தேர்வு",
     export_saved_data: "சேமித்த தரவை ஏற்றுமதி செய்",
     dbml_view: "DBML காட்சி",
-    tab_view: "தாவல் காட்சி",
     label: "லேபிள்",
     many_side_label: "Many(n) பக்க லேபிள்",
     version: "பதிப்பு",
@@ -275,18 +256,14 @@ const tm = {
     read_only: "வாசிக்க மட்டும்",
     continue: "தொடரு",
     restore_version: "பதிப்பை மீட்டெடு",
-    restore_warning:
-      "வேறு பதிப்பை ஏற்றினால் மாற்றங்கள் மேலெழுதப்படும்.",
+    restore_warning: "வேறு பதிப்பை ஏற்றினால் மாற்றங்கள் மேலெழுதப்படும்.",
     return_to_current: "வரைபடத்திற்குத் திரும்பு",
     no_changes_to_record: "பதிவு செய்ய மாற்றங்கள் இல்லை",
-    click_to_view: "காண கிளிக் செய்யவும்",
     load_more: "மேலும் ஏற்று",
     clear_cache: "கேஷை அழி",
     cache_cleared: "கேஷ் அழிக்கப்பட்டது",
-    failed_to_record_version:
-      "பதிப்பு பதிவு செய்ய முடியவில்லை",
-    failed_to_load_diagram:
-      "வரைபடத்தை ஏற்ற முடியவில்லை",
+    failed_to_record_version: "பதிப்பு பதிவு செய்ய முடியவில்லை",
+    failed_to_load_diagram: "வரைபடத்தை ஏற்ற முடியவில்லை",
     see_all: "அனைத்தையும் காண்க",
     insert_sql: "SQL செருகு",
     upload_file: "கோப்பு பதிவேற்று",
@@ -301,26 +278,31 @@ const tm = {
     references: "குறிப்புகள்",
     auto_arrange: "தானியங்கு ஒழுங்கமைப்பு",
     auto_connect_fk: "அயல் விசைகளைத் தானாக இணை",
-    auto_connect_fk_success: "{{count}} அயல் விசை குறிப்பு(கள்) உருவாக்கப்பட்டன",
-    no_foreign_keys_found: "உறவுகள் எதுவும் கிடைக்கவில்லை",
-    all_relations_already_connected: "அனைத்து உறவுகளும் ஏற்கனவே இணைக்கப்பட்டுள்ளன",
+    auto_connect_fk_success:
+      "{{count}} அயல் விசை குறிப்பு(கள்) உருவாக்கப்பட்டன",
+    all_relations_already_connected:
+      "அனைத்து உறவுகளும் ஏற்கனவே இணைக்கப்பட்டுள்ளன",
     auto_connect_fk_modal_title: "அயல் விசைகளைத் தானாக இணை",
-    auto_connect_fk_modal_description: "PK/FK உறவுகளைத் தானாக அமைக்க, உங்கள் நெடுவரிசைகள் நிலையான பெயரிடல் மரபுகளைப் பின்பற்ற வேண்டும்:",
-    auto_connect_fk_rule_1: "அட்டவணை முன்னொட்டு + PK நெடுவரிசை (எ.கா., முதன்மை விசை 'id' கொண்ட 'users' அட்டவணைக்கு user_id அல்லது users_id)",
-    auto_connect_fk_rule_2: "பொருந்தும் PK நெடுவரிசைப் பெயர் (எ.கா., பெற்றோர் அட்டவணையில் உள்ள author_id உடன் பொருந்தும் author_id)",
-    auto_connect_fk_modal_question: "வரைபடத்தை ஸ்கேன் செய்து பொருந்தும் உறவுகளை உருவாக்க விரும்புகிறீர்களா?",
+    auto_connect_fk_modal_description:
+      "PK/FK உறவுகளைத் தானாக அமைக்க, உங்கள் நெடுவரிசைகள் நிலையான பெயரிடல் மரபுகளைப் பின்பற்ற வேண்டும்:",
+    auto_connect_fk_rule_1:
+      "அட்டவணை முன்னொட்டு + PK நெடுவரிசை (எ.கா., முதன்மை விசை 'id' கொண்ட 'users' அட்டவணைக்கு user_id அல்லது users_id)",
+    auto_connect_fk_rule_2:
+      "பொருந்தும் PK நெடுவரிசைப் பெயர் (எ.கா., பெற்றோர் அட்டவணையில் உள்ள author_id உடன் பொருந்தும் author_id)",
+    auto_connect_fk_modal_question:
+      "வரைபடத்தை ஸ்கேன் செய்து பொருந்தும் உறவுகளை உருவாக்க விரும்புகிறீர்களா?",
     migrations: "இடம்பெயர்வுகள்",
     generate_migration: "இடம்பெயர்வை உருவாக்கு",
-    migration_not_supported_generic: "பொதுவான வரைபடங்களுக்கு இடம்பெயர்வுகள் ஆதரிக்கப்படவில்லை.",
+    migration_not_supported_generic:
+      "பொதுவான வரைபடங்களுக்கு இடம்பெயர்வுகள் ஆதரிக்கப்படவில்லை.",
     no_migration_needed: "இடம்பெயர்வு தேவையில்லை",
     scripts: "ஸ்கிரிப்ட்கள்",
     json_diff: "JSON வேறுபாடு",
-    download: "பதிவிறக்கு",
     show_comments: "கருத்துகளைக் காட்டு",
     configure_custom_types: "தனிப்பயன் வகைகளை உள்ளமை",
     type_color: "நிறம்",
-    custom_types_description: "இயல்பாக ஆதரிக்கப்படாத தனிப்பயன் தரவு வகைகளை வரையறுக்கவும். நெடுவரிசைகளை உருவாக்கும்போது அல்லது திருத்தும்போது இந்த வகைகள் கிடைக்கும்.",
-    type_data_corrupted: "உள்ளமைக்கப்பட்ட வகைகள் சிதைந்துள்ளன.",
+    custom_types_description:
+      "இயல்பாக ஆதரிக்கப்படாத தனிப்பயன் தரவு வகைகளை வரையறுக்கவும். நெடுவரிசைகளை உருவாக்கும்போது அல்லது திருத்தும்போது இந்த வகைகள் கிடைக்கும்.",
     no_custom_types: "நீங்கள் எந்த வகையையும் உள்ளமைக்கவில்லை",
     close: "மூடு",
     add_custom_type: "தனிப்பயன் வகை சேர்",
@@ -335,8 +317,6 @@ const tm = {
     force_hide: "கட்டாயமாக மறை",
     primary_key: "முதன்மை விசை",
     foreign_key: "அயல் விசை",
-    import_with_ai: "AI மூலம் இறக்குமதி செய்",
-    ai_import_failed: "AI இறக்குமதி தோல்வியடைந்தது. மீண்டும் முயற்சிக்கவும்.",
     views: "காட்சிகள்",
     add_view: "காட்சி சேர்",
     edit_view: "{{extra}} {{viewName}} காட்சியைத் திருத்து",
@@ -360,17 +340,23 @@ const tm = {
     view_w_no_name: "பெயர் இல்லாத காட்சி",
     view_w_no_base_table: "'{{viewName}}' காட்சிக்கு அடிப்படை அட்டவணை இல்லை",
     duplicate_views: "'{{viewName}}' என்ற பெயரில் நகல் காட்சிகள்",
-    view_name_clashes_w_table: "'{{viewName}}' காட்சிக்கு ஒரு அட்டவணையின் அதே பெயர் உள்ளது",
+    view_name_clashes_w_table:
+      "'{{viewName}}' காட்சிக்கு ஒரு அட்டவணையின் அதே பெயர் உள்ளது",
     join_w_no_table: "'{{viewName}}' காட்சியில் அட்டவணை இல்லாத இணைப்பு",
-    join_w_no_condition: "'{{viewName}}' காட்சியில் '{{tableName}}' மீதான இணைப்புக்கு நிபந்தனை இல்லை",
-    join_out_of_order: "'{{viewName}}' காட்சியில் '{{tableName}}' மீதான இணைப்பு, அதற்குப் பின் இணைக்கப்பட்ட அட்டவணையைக் குறிப்பிடுகிறது",
-    empty_view_column: "'{{viewName}}' காட்சியில் வெறுமையான வெளியீட்டு நெடுவரிசை",
-    duplicate_view_columns: "'{{viewName}}' காட்சியில் நகல் வெளியீட்டு நெடுவரிசை '{{columnName}}'",
+    join_w_no_condition:
+      "'{{viewName}}' காட்சியில் '{{tableName}}' மீதான இணைப்புக்கு நிபந்தனை இல்லை",
+    join_out_of_order:
+      "'{{viewName}}' காட்சியில் '{{tableName}}' மீதான இணைப்பு, அதற்குப் பின் இணைக்கப்பட்ட அட்டவணையைக் குறிப்பிடுகிறது",
+    empty_view_column:
+      "'{{viewName}}' காட்சியில் வெறுமையான வெளியீட்டு நெடுவரிசை",
+    duplicate_view_columns:
+      "'{{viewName}}' காட்சியில் நகல் வெளியீட்டு நெடுவரிசை '{{columnName}}'",
     lock: "பூட்டு",
     unlock: "திற",
     edit_dbml: "DBML ஐத் திருத்து",
     dbml_problem: "Ln {{line}}, Col {{column}}: {{message}}",
-    move_to_cloud_prompt: "இந்த வரைபடம் உங்கள் உலாவியில் உள்ளூரில் சேமிக்கப்பட்டுள்ளது. கிளவுடுக்கு நகர்த்தவா?",
+    move_to_cloud_prompt:
+      "இந்த வரைபடம் உங்கள் உலாவியில் உள்ளூரில் சேமிக்கப்பட்டுள்ளது. கிளவுடுக்கு நகர்த்தவா?",
     move: "நகர்த்து",
     dismiss: "நிராகரி",
     view_actions: "காட்சி செயல்கள்",
@@ -382,30 +368,34 @@ const tm = {
     collapse_unlinked_columns: "இணைக்கப்படாத நெடுவரிசைகளைச் சுருக்கு",
     note_actions: "குறிப்பு செயல்கள்",
     area_actions: "பகுதி செயல்கள்",
-    database_icon: "{{databaseName}} ஐகான்",
     database_diagram: "{{databaseName}} வரைபடம்",
     templates: "வார்ப்புருக்கள்",
     diagrams: "வரைபடங்கள்",
     logo: "லோகோ",
-    check_syntax_errors: "தொடரியல் பிழைகளைச் சரிபார்க்கவும் அல்லது பிழையைப் பற்றி எங்களுக்குத் தெரியப்படுத்தவும்.",
+    check_syntax_errors:
+      "தொடரியல் பிழைகளைச் சரிபார்க்கவும் அல்லது பிழையைப் பற்றி எங்களுக்குத் தெரியப்படுத்தவும்.",
     parse_error_at: "{{name}} [Ln {{line}}, Col {{column}}]: {{message}}",
     overwrite_checkbox: "மேலெழுதும் தேர்வுப்பெட்டி",
     file_contains_error: "கோப்பில் பிழை உள்ளது.",
-    file_missing_diagram_properties: "கோப்பில் வரைபடத்திற்குத் தேவையான பண்புகள் இல்லை.",
-    imported_diagram_database_mismatch: "இறக்குமதி செய்த வரைபடமும் திறந்துள்ள வரைபடமும் ஒரே தரவுத்தளத்தைப் பயன்படுத்தவில்லை.",
-    relationship_references_missing_table: "{{relationshipName}} உறவு இல்லாத ஒரு அட்டவணையைக் குறிப்பிடுகிறது.",
-    relationship_references_missing_field: "{{relationshipName}} உறவு இல்லாத ஒரு நெடுவரிசையைக் குறிப்பிடுகிறது.",
+    file_missing_diagram_properties:
+      "கோப்பில் வரைபடத்திற்குத் தேவையான பண்புகள் இல்லை.",
+    imported_diagram_database_mismatch:
+      "இறக்குமதி செய்த வரைபடமும் திறந்துள்ள வரைபடமும் ஒரே தரவுத்தளத்தைப் பயன்படுத்தவில்லை.",
+    relationship_references_missing_table:
+      "{{relationshipName}} உறவு இல்லாத ஒரு அட்டவணையைக் குறிப்பிடுகிறது.",
+    relationship_references_missing_field:
+      "{{relationshipName}} உறவு இல்லாத ஒரு நெடுவரிசையைக் குறிப்பிடுகிறது.",
     ready_to_import: "எல்லாம் சரியாக உள்ளது. இப்போது இறக்குமதி செய்யலாம்.",
-    import_will_overwrite_current: "தற்போதைய வரைபடம் காலியாக இல்லை. புதிய வரைபடத்தை இறக்குமதி செய்தால் தற்போதைய மாற்றங்கள் மேலெழுதப்படும்.",
+    import_will_overwrite_current:
+      "தற்போதைய வரைபடம் காலியாக இல்லை. புதிய வரைபடத்தை இறக்குமதி செய்தால் தற்போதைய மாற்றங்கள் மேலெழுதப்படும்.",
     all: "அனைத்தும்",
     all_databases: "அனைத்து தரவுத்தளங்கள்",
     all_types: "அனைத்து வகைகள்",
     cloud: "கிளவுட்",
     local: "உள்ளூர்",
     you: "நீங்கள்",
-    owner: "உரிமையாளர்",
-    user_with_id: "பயனர் {{id}}",
-    no_diagrams_match_filters: "உங்கள் வடிகட்டிகளுக்குப் பொருந்தும் வரைபடங்கள் இல்லை.",
+    no_diagrams_match_filters:
+      "உங்கள் வடிகட்டிகளுக்குப் பொருந்தும் வரைபடங்கள் இல்லை.",
     failed_to_load_short: "ஏற்ற முடியவில்லை",
     invalid_dbml: "தவறான DBML",
   },
