@@ -1,7 +1,6 @@
 import {
   memo,
   useCallback,
-  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -30,6 +29,7 @@ export default memo(function Relationship({
   endTable,
   relationships,
   route,
+  crossingColor,
   selected,
   onSelect,
 }) {
@@ -60,6 +60,7 @@ export default memo(function Relationship({
         endTable={endTable}
         relationships={relationships}
         route={route}
+        crossingColor={crossingColor}
         selected={selected}
         onSelect={onSelect}
         onEdit={edit}
@@ -95,6 +96,7 @@ const RelationshipPath = memo(function RelationshipPath({
   endTable,
   relationships,
   route,
+  crossingColor,
   selected,
   onSelect,
   onEdit,
@@ -232,6 +234,10 @@ const RelationshipPath = memo(function RelationshipPath({
 
   if (!d) return null;
 
+  // A line that crosses another gets a color to tell them apart, unless the
+  // user gave it one.
+  const color = data.color ?? crossingColor;
+
   return (
     <g
       className="select-none group"
@@ -257,7 +263,7 @@ const RelationshipPath = memo(function RelationshipPath({
         ref={pathRef}
         d={d}
         className={`relationship-path${selected ? " selected" : ""}`}
-        style={{ stroke: hovered || selected ? undefined : data.color }}
+        style={{ stroke: hovered || selected ? undefined : color }}
         fill="none"
         cursor="pointer"
       />
@@ -265,7 +271,7 @@ const RelationshipPath = memo(function RelationshipPath({
         <text
           x={anchors?.label.x ?? 0}
           y={anchors?.label.y ?? 0}
-          fill={data.color ?? (settings.mode === "dark" ? "lightgrey" : "#333")}
+          fill={color ?? (settings.mode === "dark" ? "lightgrey" : "#333")}
           fontSize={labelFontSize}
           fontWeight={500}
           ref={labelRef}
@@ -280,13 +286,13 @@ const RelationshipPath = memo(function RelationshipPath({
             x={anchors.start.x}
             y={anchors.start.y}
             text={cardinalityStart}
-            color={data.color}
+            color={color}
           />
           <CardinalityLabel
             x={anchors.end.x}
             y={anchors.end.y}
             text={cardinalityEnd}
-            color={data.color}
+            color={color}
           />
         </>
       )}
@@ -298,21 +304,23 @@ function CardinalityLabel({ x, y, text, color, r = 12, padding = 14 }) {
   const [textWidth, setTextWidth] = useState(0);
   const textRef = useRef(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (textRef.current) {
-      const bbox = textRef.current.getBBox();
-      setTextWidth(bbox.width);
+      setTextWidth(textRef.current.getBBox().width);
     }
   }, [text]);
+
+  // A circle for short labels like "1" or "n", a pill for longer ones.
+  const width = Math.max(2 * r, textWidth + padding);
 
   return (
     <g>
       <rect
-        x={x - textWidth / 2 - padding / 2}
+        x={x - width / 2}
         y={y - r}
         rx={r}
         ry={r}
-        width={textWidth + padding}
+        width={width}
         height={r * 2}
         fill={color ?? "grey"}
         className="group-hover:fill-sky-600"
@@ -324,7 +332,7 @@ function CardinalityLabel({ x, y, text, color, r = 12, padding = 14 }) {
         fill="white"
         strokeWidth="0.5"
         textAnchor="middle"
-        alignmentBaseline="middle"
+        dominantBaseline="central"
       >
         {text}
       </text>

@@ -47,10 +47,12 @@ import {
 import { getRectFromEndpoints, isInsideRect } from "../../utils/rect";
 import {
   dragSegment,
+  findCrossings,
   paramsToWaypoints,
   removeEmptySegments,
   routeParams,
 } from "../../utils/orthogonalRouting";
+import { crossingColors } from "../../utils/relationshipRoutes";
 import { State, noteWidth } from "../../data/constants";
 import { nanoid } from "nanoid";
 
@@ -192,6 +194,10 @@ export default function Canvas() {
     views,
     settings.showComments,
   );
+  const lineColors = useMemo(() => {
+    const points = new Map([...routes].map(([id, r]) => [id, r.points]));
+    return crossingColors(findCrossings(points).neighbours, relationships);
+  }, [routes, relationships]);
   // The relationship line segment being dragged: { id, index, points,
   // initialWaypoints, origin, moved, waypoints }. `points` is the route when
   // the drag started and `waypoints` the latest result. A ref, so pointer
@@ -1085,6 +1091,7 @@ export default function Canvas() {
               endTable={tablesById.get(e.endTableId)}
               relationships={relationships}
               route={routes.get(e.id)}
+              crossingColor={lineColors.get(e.id)}
               selected={
                 selectedElement.element === ObjectType.RELATIONSHIP &&
                 selectedElement.id === e.id

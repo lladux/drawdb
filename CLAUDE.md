@@ -93,7 +93,7 @@ Diagrams are saved to the backend through the editor's "cloud" extension hooks: 
 
 ### Canvas
 
-`components/EditorCanvas/` renders the diagram as SVG (`Canvas.jsx`, plus `Table`, `Relationship`, `Area`, `Note` and `View` components). Relationship paths come from `utils/calcPath.js`. Layout constants (table width, field height, grid size) are in `data/constants.js`. Auto-layout is in `utils/arrangeTables.js` and `utils/autoArrange.js` (dagre).
+`components/EditorCanvas/` renders the diagram as SVG (`Canvas.jsx`, plus `Table`, `Relationship`, `Area`, `Note` and `View` components). Single-column relationships are routed around tables by `utils/orthogonalRouting.js` (A*, then `nudgeRoutes` spreads overlapping segments), driven by `useRelationshipRoutes.js` with shared helpers in `utils/relationshipRoutes.js`; composite keys still use `utils/calcPath.js`. Lines that cross (`findCrossings`) are drawn in distinct colors (`crossingColors`) unless the user colored them. Layout constants (table width, field height, grid size) are in `data/constants.js`. Auto-layout is in `utils/arrangeTables.js` and `utils/autoArrange.js` (dagre candidates, reordered by field-level crossings, scored by routing every line).
 
 ### UI and i18n
 

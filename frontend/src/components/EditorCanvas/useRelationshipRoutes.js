@@ -1,46 +1,16 @@
 import { useMemo, useRef } from "react";
-import { tableFieldHeight, tableHeaderHeight } from "../../data/constants";
 import {
   autoRoute,
   manualRoute,
   nudgeRoutes,
   routeMargin,
 } from "../../utils/orthogonalRouting";
-import {
-  getCommentHeight,
-  getFieldOffsetY,
-  getRelationshipFields,
-  getTableHeight,
-  getTableWidth,
-  getVisibleFieldIndex,
-  getVisibleFields,
-} from "../../utils/utils";
-import {
-  getViewHeight,
-  getViewWidth,
-  resolveViewColumns,
-} from "../../utils/views";
+import { fieldAnchorY, routeObstacles } from "../../utils/relationshipRoutes";
+import { getRelationshipFields } from "../../utils/utils";
 
 // Tables this far from a line's endpoints can't change its route, so moving
 // them doesn't invalidate the cached route.
 const cacheRegion = 300;
-
-function fieldAnchorY(table, fieldId, width, relationships, showComments) {
-  const index = getVisibleFieldIndex(table, fieldId, relationships);
-  if (index < 0) return null;
-  return (
-    table.y +
-    tableHeaderHeight +
-    getCommentHeight(table.comment, width, showComments) +
-    getFieldOffsetY(
-      getVisibleFields(table, relationships),
-      index,
-      width,
-      showComments,
-    ) +
-    tableFieldHeight / 2
-  );
-}
 
 const rectKey = (r) => `${r.x},${r.y},${r.width},${r.height}`;
 
@@ -67,31 +37,12 @@ export default function useRelationshipRoutes(
   const previousRef = useRef(new Map());
 
   return useMemo(() => {
-    const rects = new Map();
-    for (const table of tables) {
-      if (table.hidden) continue;
-      rects.set(table.id, {
-        x: table.x,
-        y: table.y,
-        width: getTableWidth(table),
-        height: getTableHeight(table, showComments, relationships),
-      });
-    }
-    // Lines go around views too, though they never connect to one.
-    const obstacles = [...rects.values()];
-    for (const view of views) {
-      if (view.hidden) continue;
-      obstacles.push({
-        x: view.x,
-        y: view.y,
-        width: getViewWidth(view),
-        height: getViewHeight(
-          view,
-          resolveViewColumns(view, tables),
-          showComments,
-        ),
-      });
-    }
+    const { rects, obstacles } = routeObstacles(
+      tables,
+      views,
+      relationships,
+      showComments,
+    );
     const tablesById = new Map(tables.map((t) => [t.id, t]));
 
     const auto = new Map();

@@ -537,6 +537,63 @@ export function nudgeRoutes(routes) {
   return result;
 }
 
+/**
+ * Where routes cross: a horizontal segment of one passing through a vertical
+ * segment of another. Touching at an end or running alongside doesn't count.
+ *
+ * @param {Map<any, Array<{x, y}>>} routes - polylines by relationship id
+ * @returns {{ count: number, neighbours: Map<any, Set<any>> }} the number of
+ *   crossing points, and for each route the routes it crosses
+ */
+export function findCrossings(routes) {
+  const horizontal = [];
+  const vertical = [];
+  for (const [id, points] of routes) {
+    for (let k = 0; k + 1 < points.length; k++) {
+      const a = points[k];
+      const b = points[k + 1];
+      if (Math.abs(a.y - b.y) < 0.5) {
+        horizontal.push({
+          id,
+          at: a.y,
+          lo: Math.min(a.x, b.x),
+          hi: Math.max(a.x, b.x),
+        });
+      } else if (Math.abs(a.x - b.x) < 0.5) {
+        vertical.push({
+          id,
+          at: a.x,
+          lo: Math.min(a.y, b.y),
+          hi: Math.max(a.y, b.y),
+        });
+      }
+    }
+  }
+
+  let count = 0;
+  const neighbours = new Map();
+  const link = (a, b) => {
+    if (!neighbours.has(a)) neighbours.set(a, new Set());
+    neighbours.get(a).add(b);
+  };
+  for (const h of horizontal) {
+    for (const v of vertical) {
+      if (h.id === v.id) continue;
+      if (
+        v.at > h.lo + 0.5 &&
+        v.at < h.hi - 0.5 &&
+        h.at > v.lo + 0.5 &&
+        h.at < v.hi - 0.5
+      ) {
+        count++;
+        link(h.id, v.id);
+        link(v.id, h.id);
+      }
+    }
+  }
+  return { count, neighbours };
+}
+
 // SVG path through `points` with rounded corners.
 export function roundedPath(points, radius = 10) {
   if (points.length < 2) return "";

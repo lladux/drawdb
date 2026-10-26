@@ -758,7 +758,7 @@ export default function ControlPanel({
     }));
   };
   const autoArrangeTables = () => {
-    const positions = autoArrange(tables, relationships, settings);
+    const positions = autoArrange(tables, relationships, settings, views);
     const positionById = new Map(positions.map((p) => [p.id, p]));
 
     const elements = [];
