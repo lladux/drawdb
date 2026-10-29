@@ -139,7 +139,7 @@ class WorkspaceStore:
             "updatedAt": row["updated_at"],
         }
 
-    def list(self, tokens: list[str]) -> list[dict]:
+    def list_all(self, tokens: list[str]) -> list[dict]:
         with self.db.connect() as conn:
             rows = conn.execute("SELECT * FROM workspaces ORDER BY created_at, rowid").fetchall()
             return [self._json(conn, r, tokens) for r in rows]
@@ -234,7 +234,7 @@ def store(request: Request) -> WorkspaceStore:
 
 @router.get("")
 def list_workspaces(request: Request):
-    return {"success": True, "data": store(request).list(request_tokens(request))}
+    return {"success": True, "data": store(request).list_all(request_tokens(request))}
 
 
 @router.post("")

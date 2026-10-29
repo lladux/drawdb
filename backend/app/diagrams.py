@@ -44,7 +44,7 @@ class DiagramStore:
             self.workspaces.require_access(conn, row["workspace_id"], tokens)
         return row
 
-    def list(self, tokens: list[str]) -> list[dict]:
+    def list_all(self, tokens: list[str]) -> list[dict]:
         """Diagrams in every workspace the tokens can open."""
         with self.db.connect() as conn:
             ids = self.workspaces.accessible_ids(conn, tokens)
@@ -150,7 +150,7 @@ def not_found() -> JSONResponse:
 
 @router.get("")
 def list_diagrams(request: Request):
-    return {"success": True, "data": store(request).list(request_tokens(request))}
+    return {"success": True, "data": store(request).list_all(request_tokens(request))}
 
 
 @router.get("/{diagram_id}")
